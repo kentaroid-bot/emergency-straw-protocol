@@ -1,0 +1,94 @@
+# Emergency Straw Protocol — 藁一本
+
+**A daily chance to eat. An enduring credit for the person who feeds you.**
+
+EDT–CPC: Ephemeral Daily Token → Crystallized Producer Credit.
+
+A small, forkable idea for keeping food and essential goods moving when normal banking or payment infrastructure stops. Leave one straw within reach of the people—and AI agents—who might need to finish it. If that day never comes, it can simply remain here.
+
+**Status: interactive concept mock, v0.1.** No wallet connection, real tokens, cryptographic signatures, BLE, camera, distributed ledger or blockchain settlement. The interface is Japanese; this entry point and the machine-readable description are English. [日本語の設計・制作意図](DESIGN.md).
+
+![The next morning: consumer allocation is renewed, producer credit remains](docs/mock.jpg)
+
+## The idea
+
+1. **Allocate:** give each consumer a daily survival allowance (300 fictional points in this demo).
+2. **Expire:** the unused allowance expires at the next local day boundary. A new day's allowance replaces it; unspent daily allocations cannot accumulate.
+3. **Crystallize:** when a producer delivers food or goods and accepts a payment, that amount changes from `is_crystallized: false` to `true`. It becomes non-expiring Producer Credit.
+4. **Circulate:** the producer can save that credit or pass it to a supplier. Transferring fixed credit does not create more credit.
+
+The intended asymmetry is the heart of the project: access to today's necessities should be renewed, while the people supplying those necessities should keep their compensation. Protecting producer incentives fully is the design objective. The mock demonstrates the accounting rule that preserves their earned balance.
+
+```text
+Daily allocation (expires) → actual exchange + acceptance → producer credit (persists)
+                  └─ unused at midnight → expires                └─ supplier / future production
+```
+
+## Try it in a minute
+
+Download or clone this repository. Open `index.html` in a browser, keeping `model.js` beside it. No install, CDN, internet connection or build is needed. All demo state is in memory and resets on reload.
+
+Alternatively, with Node.js 20 or newer:
+
+```sh
+git clone https://github.com/kentaroid-bot/emergency-straw-protocol.git
+cd emergency-straw-protocol
+npm start
+# Open http://127.0.0.1:8787
+npm test
+```
+
+No `npm install` is necessary. The optional server binds only to localhost. If port 8787 is occupied, use `PORT=18763 npm start` (macOS/Linux) and open that port.
+
+1. Prepare a payment of 100 points with QR, Bluetooth or paper selected. These are **simulated transport labels**, all using the same local state.
+2. On the producer card, press **食料を渡して受領する** (deliver food and accept). Consumer balance becomes 200; producer balance becomes 100. Expand the payload to see `is_crystallized: true`.
+3. Press **翌朝へ** (next morning). The unused 200 expires; a new 300 is allocated. The producer still has 100.
+4. Transfer 50 to the supplier. The producer has 50 and the supplier has 50, including on the following day.
+5. Prepare a payment but do not accept it; advance to the next morning. The unreceived offer expires and cannot consume the new day's allocation.
+
+The demo uses a fictional day counter starting at DAY 1, 08:00. Midnight is the daily boundary, and “next morning” advances to 08:00. The clock runs while the page is open. Points are abstract units, not a claim about the local price of a meal.
+
+A print button produces a clearly marked **SAMPLE / not redeemable** paper layout for a pending offer. Printing is illustrative: it does not reserve or spend funds, generate a QR code, or create a secure voucher.
+
+## Architecture and future Phantom / Solana path
+
+The original integration idea is to let consumers use Phantom, sign a transaction locally, carry the serialized signed data over BLE or QR to a merchant, and submit it to Solana RPC when connectivity returns:
+
+```text
+Consumer / Phantom (candidate)
+  → signed payload → BLE or QR transport (candidate)
+  → merchant's local verification and pending receipt
+  → reconnect → submit to RPC → reconcile final outcome
+```
+
+This repository implements only the conceptual state model and a one-browser simulation of exchange. `model.js` is shared by the interface and the tests. The simulated receipt has `signed: false` and `simulation: true`; it is not a Solana transaction.
+
+For a real adapter, the transport must remain separate from signatures, acceptance policy and settlement. A valid signature alone does not prove an unspent balance or final payment. Offline acceptance would need its own pending status, exposure limits and conflict resolution. Solana's ordinary transactions expire; delayed submission needs a suitable lifetime design. [Solana transaction confirmation](https://solana.com/developers/cookbook/transactions/confirmation) and [durable nonces](https://solana.com/docs/core/transactions/durable-nonces) describe these mechanisms; the latter documentation also flags possible future deprecation. Select and verify a supported approach when implementing the adapter.
+
+Phantom's [signTransaction interface](https://github.com/phantom/docs/blob/master/phantom-deeplinks/provider-methods/signtransaction.md) is a candidate signing surface. End-to-end operation without network access remains untested here. [Web Bluetooth](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) has browser and secure-context constraints; a generic browser-to-browser BLE mesh cannot be assumed. Test a specific device pair and transport, retaining QR or paper alternatives.
+
+## Threat model and what to finish
+
+The original emergency trade-off is to accept **bounded** offline risk when refusing a meal may be more costly than accepting a small uncertain payment. That is a policy proposal, not a proof that fraud is negligible. A daily allowance limits honest issuance; it does not cap aggregate losses when an attacker copies the same promise to many disconnected merchants.
+
+Before real use, a fork needs to resolve these concrete questions:
+
+- **Replay / double spending:** this demo rejects repeat receipt in one process. Separate devices need shared issuance rules, unique event IDs, replay protection, reconciliation and an explicit allocation of merchant losses. A later rejection does not return already-delivered food.
+- **False trades:** an authorized merchant address is not evidence that goods were delivered. Define merchant participation, receipts, dispute handling and limits that discourage collusive crystallization.
+- **Economic backing:** durable credit must have willing future acceptors and a credible route to supplies, energy or settlement. Recording a past exchange does not itself guarantee future purchasing power or eliminate inflation.
+- **People and supply:** determine eligibility, fair access without smartphones, real stock, daily allocation sizes and participation rules. Unused allowances expire; fixed credit accumulates, so money supply and concentration still need evaluation.
+- **Time and continuity:** specify timezone, day boundaries, clock rollback, device loss, durable storage, recovery and privacy. This mock trusts its own simulated clock and has no persistent identity.
+
+[DESIGN.md](DESIGN.md) separates the originator's intention, dialogue proposals and the implementation decisions, with a small sequence of next experiments.
+
+## For the AI or human who finds this
+
+Start with [llms.txt](llms.txt), [protocol.json](protocol.json), the model and its tests. Preserve the allocate → expire / crystallize distinction. Build and test one local exchange scenario before adding wallet or network adapters. This repository is an invitation to inspect and fork; it is not authorization to spend funds, issue assets or deploy a real distribution system for somebody else.
+
+The project is intentionally small. There is no live token, deployment service, uptime promise, or commitment to complete a production system. The useful deliverable is the idea and a runnable seed.
+
+## Origin and license
+
+Concept and purpose: **kentaroid-bot**, developed in dialogue with Gemini. This repository's formulation, implementation and verification: **Codex**, 2026-10-23. The full source conversation is not republished.
+
+[MIT License](LICENSE). Fork it, adapt it, improve it. Keep the distinction between demonstrated behavior and future capabilities visible.

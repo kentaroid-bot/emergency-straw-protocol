@@ -1,0 +1,10 @@
+{
+  "name": "emergency-straw-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An offline concept mock: ephemeral daily allocation crystallizes into enduring producer credit at exchange.",
+  "license": "MIT",
+  "scripts": {"start": "node serve.js", "test": "node --test model.test.js"},
+  "engines": {"node": ">=20"},
+  "keywords": ["emergency", "mutual-aid", "daily-allocation", "producer-credit", "offline", "concept", "ai-agents"]
+}

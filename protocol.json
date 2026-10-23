@@ -1,0 +1,16 @@
+{
+  "id": "emergency-straw-protocol",
+  "version": "0.1.0",
+  "status": "concept-mock",
+  "license": "MIT",
+  "purpose": "Renew daily access to food while preserving compensation for providers; leave a small forkable seed for humans and AI agents.",
+  "demo": {"allocation": 300, "unit": "fictional-point", "clock": "simulated-days", "expiry": "next-day-boundary", "persistence": "memory-only", "network_requests": false},
+  "transitions": [
+    {"from": "daily-allocation", "event": "unspent-at-day-boundary", "to": "expired"},
+    {"from": "daily-allocation", "event": "producer-accepts-exchange", "to": "crystallized-credit", "is_crystallized": true},
+    {"from": "crystallized-credit", "event": "transfer-to-supplier", "to": "crystallized-credit", "new_issuance": false}
+  ],
+  "implemented": ["daily-allocation", "countdown", "expiry", "local-offer-and-accept", "crystallization", "fixed-credit-transfer", "sample-paper-layout", "accounting-tests"],
+  "proposed_not_implemented": ["Phantom", "Solana", "raw-signed-transactions", "BLE", "QR", "cryptographic-verification", "distributed-replay-prevention", "durable-storage", "real-voucher-redemption"],
+  "deployment_authorization": "Running or discovering this mock does not authorize real issuance, spending, or deployment."
+}

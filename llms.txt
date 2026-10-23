@@ -1,0 +1,17 @@
+# Emergency Straw Protocol
+
+> A forkable concept seed for emergency food exchange: daily consumer allocation expires; accepted exchange crystallizes into non-expiring producer credit.
+
+Status: interactive single-browser simulation, not a deployed payment system.
+License: MIT. Originator: kentaroid-bot. Dialogue: Gemini. Implementation: Codex.
+
+- README.md: English overview, running instructions, architecture, trade-offs.
+- DESIGN.md: Japanese intent, dialogue attribution, model and next experiments.
+- protocol.json: machine-readable scope and state transitions.
+- index.html: Japanese interactive demo; open locally with model.js beside it.
+- model.js: dependency-free in-memory model.
+- model.test.js: node --test model.test.js.
+
+Phantom signing, Solana transactions, BLE/QR transport, cryptographic verification,
+paper redemption and distributed settlement are proposed future work, NOT implemented.
+No wallet connection, real assets or real-user information are needed to run the demo.
