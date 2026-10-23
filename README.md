@@ -1,6 +1,6 @@
 # Emergency Straw Protocol — 藁一本
 
-**A daily chance to eat. An enduring credit for the person who feeds you.**
+**Every person receives the means to eat today, unconditionally. An enduring credit remains with the person who feeds them.**
 
 EDT–CPC: Ephemeral Daily Token → Crystallized Producer Credit.
 
@@ -14,12 +14,16 @@ Leave one straw within reach of the people—and AI agents—who might need to f
 
 ## The idea
 
-1. **Allocate:** give each consumer a daily survival allowance (300 fictional points in this demo).
+The originator's principle is that money must serve the minimum conditions of living. Every person receives the means to obtain that day's food, without an income or asset test, a work requirement, or proof of hardship. This is a universal rule of issuance rather than a discretionary welfare award. Unspent daily money disappears; money exchanged for actual food or other essentials remains as the provider's compensation.
+
+1. **Allocate:** give every person an unconditional daily survival allowance (300 fictional points for the one consumer shown in this demo).
 2. **Expire:** the unused allowance expires at the next local day boundary. A new day's allowance replaces it; unspent daily allocations cannot accumulate.
 3. **Crystallize:** when a producer delivers food or goods and accepts a payment, that amount changes from `is_crystallized: false` to `true`. It becomes non-expiring Producer Credit.
 4. **Circulate:** the producer can save that credit or pass it to a supplier. Transferring fixed credit does not create more credit.
 
 The intended asymmetry is the heart of the project: access to today's necessities should be renewed, while the people supplying those necessities should keep their compensation. Protecting producer incentives fully is the design objective. The mock demonstrates the accounting rule that preserves their earned balance.
+
+Consumer and producer are roles in an exchange. A person who supplies goods also receives the daily allowance; holding crystallized credit does not remove that entitlement. Universal issuance across people is a protocol requirement for a future implementation. The current demo represents one consumer and separate provider accounts, and implements neither population-wide distribution nor identity enrollment.
 
 ```text
 Daily allocation (expires) → actual exchange + acceptance → producer credit (persists)
@@ -80,7 +84,7 @@ Before real use, a fork needs to resolve these concrete questions:
 - **Replay / double spending:** this demo rejects repeat receipt in one process. Separate devices need shared issuance rules, unique event IDs, replay protection, reconciliation and an explicit allocation of merchant losses. A later rejection does not return already-delivered food.
 - **False trades:** an authorized merchant address is not evidence that goods were delivered. Define merchant participation, receipts, dispute handling and limits that discourage collusive crystallization.
 - **Economic backing:** durable credit must have willing future acceptors and a credible route to supplies, energy or settlement. Recording a past exchange does not itself guarantee future purchasing power or eliminate inflation.
-- **People and supply:** determine eligibility, fair access without smartphones, real stock, daily allocation sizes and participation rules. Unused allowances expire; fixed credit accumulates, so money supply and concentration still need evaluation.
+- **Universal access and supply:** make one daily allocation reach each person, including people without smartphones or documents. Prevent duplicate issuance without introducing means tests, work requirements or proof of hardship. Determine real stock, the amount needed for a day's food and provider participation rules. The demo's 300 points is illustrative. Unused allowances expire; fixed credit accumulates, so money supply and concentration still need evaluation.
 - **Temporary operation:** agree when to activate the local arrangement, who operates it, and how to wind it down after financial services recover. Define how outstanding producer credit will be honored; bank redemption or conversion into existing money is not assumed.
 - **Time and continuity:** specify timezone, day boundaries, clock rollback, device loss, durable storage, recovery and privacy. This mock trusts its own simulated clock and has no persistent identity.
 

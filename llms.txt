@@ -2,6 +2,8 @@
 
 > A forkable concept seed for emergency food exchange: daily consumer allocation expires; accepted exchange crystallizes into non-expiring producer credit.
 
+Core principle: money must serve minimum survival. Every person receives an unconditional daily allocation for food, including providers and holders of crystallized credit. No income/asset test, work requirement or proof of hardship. Unspent daily allocation expires; actual exchange preserves the provider's compensation. Universal distribution and inclusive, duplicate-resistant enrollment remain to be implemented; the mock demonstrates one consumer's state transitions.
+
 Baseline scenario: electricity and internet remain available, but financial servers and intermediaries fail; local electronic-money/cash exchange and institution-dependent RWA onboarding are unavailable. Purpose: a small, temporary local economic order as a contingency. BLE/QR offline transport is an optional fallback for local connectivity interruptions.
 
 Status: interactive single-browser simulation, not a deployed payment system.

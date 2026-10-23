@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "status": "concept-mock",
   "license": "MIT",
-  "purpose": "Renew daily access to food while preserving compensation for providers; leave a small forkable seed for humans and AI agents.",
+  "purpose": "Give every person unconditional daily access to food while preserving compensation for providers; money must serve minimum survival. Leave a small forkable seed for humans and AI agents.",
+  "issuance_principles": {"recipients": "every-person-including-providers", "frequency": "daily", "means_test": false, "work_requirement": false, "proof_of_hardship": false, "crystallized_holdings_reduce_entitlement": false, "intended_use": "obtain-that-days-food", "universal_distribution_implemented": false},
   "scenario": {"electricity": "available", "internet": "available", "financial_services": "unavailable", "electronic_money_and_cash": "unusable-for-local-exchange", "institution_dependent_rwa_onboarding": "unavailable", "scope": "small-temporary-local-economic-order", "offline_transport": "optional-local-connectivity-fallback", "chosen_ledger_availability": "must-be-verified"},
   "demo": {"allocation": 300, "unit": "fictional-point", "clock": "simulated-days", "expiry": "next-day-boundary", "persistence": "memory-only", "network_requests": false},
   "transitions": [
