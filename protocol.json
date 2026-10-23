@@ -4,6 +4,7 @@
   "status": "concept-mock",
   "license": "MIT",
   "purpose": "Renew daily access to food while preserving compensation for providers; leave a small forkable seed for humans and AI agents.",
+  "scenario": {"electricity": "available", "internet": "available", "financial_services": "unavailable", "electronic_money_and_cash": "unusable-for-local-exchange", "institution_dependent_rwa_onboarding": "unavailable", "scope": "small-temporary-local-economic-order", "offline_transport": "optional-local-connectivity-fallback", "chosen_ledger_availability": "must-be-verified"},
   "demo": {"allocation": 300, "unit": "fictional-point", "clock": "simulated-days", "expiry": "next-day-boundary", "persistence": "memory-only", "network_requests": false},
   "transitions": [
     {"from": "daily-allocation", "event": "unspent-at-day-boundary", "to": "expired"},

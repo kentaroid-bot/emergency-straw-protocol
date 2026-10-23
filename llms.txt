@@ -2,6 +2,8 @@
 
 > A forkable concept seed for emergency food exchange: daily consumer allocation expires; accepted exchange crystallizes into non-expiring producer credit.
 
+Baseline scenario: electricity and internet remain available, but financial servers and intermediaries fail; local electronic-money/cash exchange and institution-dependent RWA onboarding are unavailable. Purpose: a small, temporary local economic order as a contingency. BLE/QR offline transport is an optional fallback for local connectivity interruptions.
+
 Status: interactive single-browser simulation, not a deployed payment system.
 License: MIT. Originator: kentaroid-bot. Dialogue: Gemini. Implementation: Codex.
 

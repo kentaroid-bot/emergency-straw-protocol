@@ -4,7 +4,9 @@
 
 EDT–CPC: Ephemeral Daily Token → Crystallized Producer Credit.
 
-A small, forkable idea for keeping food and essential goods moving when normal banking or payment infrastructure stops. Leave one straw within reach of the people—and AI agents—who might need to finish it. If that day never comes, it can simply remain here.
+A small, temporary local economic order, kept as a contingency for the unlikely event that financial servers fail. Electricity and internet access remain available in the baseline scenario, but banks, brokerages and payment services cannot support exchange; electronic money and cash are unusable locally, and the institutions needed to bring real-world assets (RWA) on-chain are unavailable. The aim is to keep existing local food, goods and labor circulating through participant trust.
+
+Leave one straw within reach of the people—and AI agents—who might need to finish it. If that day never comes, it can simply remain here.
 
 **Status: interactive concept mock, v0.1.** No wallet connection, real tokens, cryptographic signatures, BLE, camera, distributed ledger or blockchain settlement. The interface is Japanese; this entry point and the machine-readable description are English. [日本語の設計・制作意図](DESIGN.md).
 
@@ -52,7 +54,9 @@ A print button produces a clearly marked **SAMPLE / not redeemable** paper layou
 
 ## Architecture and future Phantom / Solana path
 
-The original integration idea is to let consumers use Phantom, sign a transaction locally, carry the serialized signed data over BLE or QR to a merchant, and submit it to Solana RPC when connectivity returns:
+The baseline is an internet-connected local exchange system that can operate without the failed financial intermediaries. Its ledger, issuance rules and settlement mechanism still need implementation. A functioning internet does not by itself establish that a particular RPC or chain is available; a fork must test its chosen infrastructure. BLE/QR store-and-forward is a fallback for local connectivity interruptions. The demo runs offline for portability.
+
+For that connectivity fallback, the original integration idea is to let consumers use Phantom, sign a transaction locally, carry the serialized signed data over BLE or QR to a merchant, and submit it to Solana RPC when connectivity returns:
 
 ```text
 Consumer / Phantom (candidate)
@@ -69,7 +73,7 @@ Phantom's [signTransaction interface](https://github.com/phantom/docs/blob/maste
 
 ## Threat model and what to finish
 
-The original emergency trade-off is to accept **bounded** offline risk when refusing a meal may be more costly than accepting a small uncertain payment. That is a policy proposal, not a proof that fraud is negligible. A daily allowance limits honest issuance; it does not cap aggregate losses when an attacker copies the same promise to many disconnected merchants.
+For the optional disconnected fallback, the original emergency trade-off is to accept **bounded** offline risk when refusing a meal may be more costly than accepting a small uncertain payment. That is a policy proposal, not a proof that fraud is negligible. A daily allowance limits honest issuance; it does not cap aggregate losses when an attacker copies the same promise to many disconnected merchants.
 
 Before real use, a fork needs to resolve these concrete questions:
 
@@ -77,6 +81,7 @@ Before real use, a fork needs to resolve these concrete questions:
 - **False trades:** an authorized merchant address is not evidence that goods were delivered. Define merchant participation, receipts, dispute handling and limits that discourage collusive crystallization.
 - **Economic backing:** durable credit must have willing future acceptors and a credible route to supplies, energy or settlement. Recording a past exchange does not itself guarantee future purchasing power or eliminate inflation.
 - **People and supply:** determine eligibility, fair access without smartphones, real stock, daily allocation sizes and participation rules. Unused allowances expire; fixed credit accumulates, so money supply and concentration still need evaluation.
+- **Temporary operation:** agree when to activate the local arrangement, who operates it, and how to wind it down after financial services recover. Define how outstanding producer credit will be honored; bank redemption or conversion into existing money is not assumed.
 - **Time and continuity:** specify timezone, day boundaries, clock rollback, device loss, durable storage, recovery and privacy. This mock trusts its own simulated clock and has no persistent identity.
 
 [DESIGN.md](DESIGN.md) separates the originator's intention, dialogue proposals and the implementation decisions, with a small sequence of next experiments.
