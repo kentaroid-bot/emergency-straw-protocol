@@ -1,4 +1,6 @@
-# Emergency Straw Protocol — 藁一本
+# 藁一本の約束 — Emergency Straw Protocol
+
+**今日を生きる分は、誰にでも。届けた人には、残る対価を。**
 
 **Every person receives the means to eat today, unconditionally. An enduring credit remains with the person who feeds them.**
 

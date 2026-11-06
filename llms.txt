@@ -1,4 +1,4 @@
-# Emergency Straw Protocol
+# 藁一本の約束 — Emergency Straw Protocol
 
 > A forkable concept seed for emergency food exchange: daily consumer allocation expires; accepted exchange crystallizes into non-expiring producer credit.
 
