@@ -1,7 +1,7 @@
 import {Buffer} from 'buffer';
 import {Connection,Transaction} from '@solana/web3.js';
 import {TOKEN_PROGRAM_ID,getAssociatedTokenAddressSync,createAssociatedTokenAccountIdempotentInstruction,createTransferCheckedInstruction} from '@solana/spl-token';
-import {pk,assertDevnet,readInstance,readPerson,readClock,currentDay,remaining,amount,enrollInstruction,paymentInstructions,envelope,inspectPayment} from './protocol.mjs';
+import {pk,assertDevnet,readInstance,readPerson,readClock,currentDay,remaining,amount,budgetInstructions,enrollInstruction,paymentInstructions,envelope,inspectPayment} from './protocol.mjs';
 globalThis.Buffer=Buffer;
 const $=id=>document.getElementById(id),RPC='https://api.devnet.solana.com';
 const connection=new Connection(RPC,'confirmed');
@@ -41,7 +41,7 @@ async function broadcast(tx){
  }catch(e){if(!li.textContent.includes('失敗'))li.append(' · 結果をExplorerで確認');throw Error(`${e.message} 同じ支払いの再作成前に、表示した署名の結果と残高を確認してください。`);}
 }
 async function signAndSend(instructions){const s=snapshot();await assertDevnet(connection);const latest=await connection.getLatestBlockhash('confirmed');unchanged(s);
- const tx=new Transaction({feePayer:s.wallet,recentBlockhash:latest.blockhash}).add(...instructions),message=tx.serializeMessage();const signed=await provider.signTransaction(tx);unchanged(s);
+ const tx=new Transaction({feePayer:s.wallet,recentBlockhash:latest.blockhash}).add(...budgetInstructions(),...instructions),message=tx.serializeMessage();const signed=await provider.signTransaction(tx);unchanged(s);
  if(!signed.serializeMessage().equals(message))throw Error('署名時に取引内容が変わりました。');await broadcast(signed);await refresh();}
 async function selectInstance(){generation++;instance=null;person=null;clockReadAt=0;invalidate();$('outgoing').value='';$('copy').disabled=true;write('remaining','—');write('credit','—');write('countdown','—');controls();
  const selected=manifest?.instances?.[$('instance').value];if(!manifest?.program||!selected){write('deployment','Devnet未配備です。配備情報が保存されると操作できます。');return;}

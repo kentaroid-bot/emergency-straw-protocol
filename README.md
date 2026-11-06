@@ -10,7 +10,7 @@ A small, temporary local economic order, kept as a contingency for the unlikely 
 
 Leave one straw within reach of the people—and AI agents—who might need to finish it. If that day never comes, it can simply remain here.
 
-**Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Public Devnet deployment awaits free test SOL; actual Phantom signing is not yet verified. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
+**Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Deployed on public Devnet, with the full 120-second day cycle verified on-chain. Phantom connection, enrollment, payment signing, countersigning and credit transfer have also been verified in Brave. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
 
 The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens minted only when a payment is accepted**. Unused allowance is an expiring right, never pre-minted supply. Earned producer credit persists. The Devnet prototype enforces this per wallet; unique-person enrollment remains future work.
 
@@ -71,7 +71,7 @@ npm start
 
 The Devnet app provides Phantom connection, permissionless per-wallet enrollment, consumer-signed payment data, producer countersigning and issuance, and ordinary SPL credit transfers. Normal days roll over at midnight JST; a separate mint uses 120-second days for a quick demonstration. The consumer pays the transaction fee and the recipient account's rent. Enrollment itself mints nothing. Both parties sign each payment; the on-chain program enforces daily spending and a persistent nonce. Account creation, allowance consumption and minting commit atomically.
 
-`program/src/lib.rs` contains the native Rust program; `app/protocol.mjs` defines the client encoding and strict imported-transaction checks. `deployments/devnet.json` records deployment state; currently it has no deployed program. Read [DEVNET.md](DEVNET.md) for building the SBF binary, local tests, dedicated Devnet keys, deployment, network smoke tests and the Phantom walkthrough. The new app needs the network and a localhost server; the old mock still works from disk.
+`program/src/lib.rs` contains the native Rust program; `app/protocol.mjs` defines the client encoding and strict imported-transaction checks. `deployments/devnet.json` records the deployed program and mints. `deployments/devnet-smoke.json` contains transaction signatures for the verified public-network cycle; `deployments/phantom-check.json` records the separate browser check. Read [DEVNET.md](DEVNET.md) for building the SBF binary, local tests, dedicated Devnet keys, deployment, network smoke tests and the Phantom walkthrough. The new app needs the network and a localhost server; the old mock still works from disk.
 
 ## Architecture and future Phantom / Solana path
 

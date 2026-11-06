@@ -1,7 +1,26 @@
 {
   "cluster": "devnet",
   "rpc": "https://api.devnet.solana.com",
-  "program": null,
-  "instances": {},
-  "status": "awaiting-devnet-deployment"
+  "program": "B58EpKJJq6YFJbY7QTdVek6Dh2TPeTx1D2Pvnvvvi6V8",
+  "instances": {
+    "daily": {
+      "config": "8nsVkZeDMNHvuRvHj1H6YAenx7thRxog1DazdmCQRcLK",
+      "mint": "747UcNdcvMGB5U25DnR8reBtEf9wUWoajhLHHYWPCoa5",
+      "periodSeconds": 86400,
+      "offsetSeconds": 32400,
+      "initializationSignature": "5auYru57VS24jaqmnTAxQ5dLzVpDThU3KrRNoKzuYsbj4Ri3qcH2Mdb7GAKVehT1tCk1kLunxhXZmj9UQF17zazm"
+    },
+    "demo": {
+      "config": "E6Y4vkqECWstNiR7o83P6QNSaSzC5LczVEfnRKncv5ac",
+      "mint": "7JG3TRXjq4JdaJRZJe1CiA8cXCe7fDWiFmZhi1Kv5Ppa",
+      "periodSeconds": 120,
+      "offsetSeconds": 0,
+      "initializationSignature": "3uhD3K9r4pQ3hHg1ijwdvwuKfncLAyjJrnEApunVPNkVW236nPCZ4ZzC5wDAd68MTWpCyrYk2KBW7u9iKYtDTPC7"
+    }
+  },
+  "status": "deployed",
+  "deploymentSignature": "2xbpHfVGSjjuAZFdwB9W21ZWg1dWYgJ9VY7d3f8qb4VwTk1zn3V7Uo98so299YD32c7aQ9YkRx2JsudcGepszJa2",
+  "binarySha256": "18c169e1bbdae6473f91c435ae88507a2a07454dfa6bbbe4b2f10525107dff45",
+  "upgradeAuthority": "HfmUvjg2iq4QeUErKD2yN74SvNzomeCveoQV97gkNiEq",
+  "updatedAt": "2026-11-06T10:35:25.236Z"
 }

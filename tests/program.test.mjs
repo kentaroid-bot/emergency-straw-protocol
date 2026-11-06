@@ -47,20 +47,20 @@ test('JST day boundary expires only capacity; credits survive, transfer, next pa
 test('both signatures, recipient ownership, positive integer amount, and mint authority are enforced',()=>{
  const f=fixture();const {send,fail,pay,alice,bob,carol,mint,authority,supply,state}=f;
  // Precreate the recipient account, then strip each signer flag from Pay alone.
- f.ok(send([pay(10)[0]],[alice]));
- for(const index of [0,1]){const ix=pay(10)[1];ix.keys[index].isSigner=false;fail(send([ix],index===1?[alice]:[bob]));}
+ f.ok(send([pay(10)[2]],[alice]));
+ for(const index of [0,1]){const ix=pay(10)[3];ix.keys[index].isSigner=false;fail(send([ix],index===1?[alice]:[bob]));}
  fail(send(pay(0),[alice,bob]));fail(send(pay(301),[alice,bob]));fail(send(pay(10,state().nonce,f.day(),alice),[alice]));
- const mismatch=pay(10);mismatch[1].keys[1].pubkey=carol.publicKey;fail(send(mismatch,[alice,carol]));
+ const mismatch=pay(10);mismatch[3].keys[1].pubkey=carol.publicKey;fail(send(mismatch,[alice,carol]));
  const mintIx=createMintToCheckedInstruction(mint,getAssociatedTokenAddressSync(mint,bob.publicKey),authority,1000n,0);mintIx.keys[2].isSigner=false;
- fail(send([pay(1)[0],mintIx],[alice]));assert.equal(supply(),0n);assert.equal(state().spent,0n);
+ fail(send([pay(1)[2],mintIx],[alice]));assert.equal(supply(),0n);assert.equal(state().spent,0n);
 });
 test('two conflicting payments, transaction atomicity and cross-instance state',()=>{
  const f=fixture();const {send,ok,fail,pay,alice,bob,state,supply,program,config}=f;
  const a=pay(200),b=pay(200);ok(send(a,[alice,bob]));fail(send(b,[alice,bob]));assert.equal(supply(),200n);
  // First instruction would succeed, but second exceeds cap: both must roll back.
- fail(send([...pay(50),...pay(100,state().nonce+1n)],[alice,bob]));assert.equal(state().spent,200n);assert.equal(supply(),200n);
+ fail(send([...pay(50),...pay(100,state().nonce+1n).slice(2)],[alice,bob]));assert.equal(state().spent,200n);assert.equal(supply(),200n);
  const other=Keypair.generate();ok(send(initInstructions(program,other.publicKey,alice.publicKey,120,Number(f.svm.minimumBalanceForRentExemption(81n))),[alice,other]));
- const malicious=pay(1);malicious[1].keys[2].pubkey=other.publicKey;fail(send(malicious,[alice,bob]));assert.equal(supply(),200n);
+ const malicious=pay(1);malicious[3].keys[2].pubkey=other.publicKey;fail(send(malicious,[alice,bob]));assert.equal(supply(),200n);
 });
 test('120-second demonstration uses chain clock and resists rollback',()=>{
  const f=fixture(120);f.ok(f.send(f.pay(300),[f.alice,f.bob]));const clock=f.svm.getClock();clock.unixTimestamp+=120n;f.svm.setClock(clock);
@@ -78,7 +78,17 @@ test('producer validates complete imported transaction and consumer signature be
  assert.throws(()=>inspectPayment(pack(partial()),f.program,f.config.publicKey,f.carol.publicKey));
  const extra=partial();extra.add(SystemProgram.transfer({fromPubkey:f.bob.publicKey,toPubkey:f.alice.publicKey,lamports:1}));extra.partialSign(f.alice);
  assert.throws(()=>inspectPayment(pack(extra),f.program,f.config.publicKey,f.bob.publicKey));
- const altered=partial();altered.instructions[1].data.writeBigUInt64LE(101n,1);
- const hostile=JSON.stringify({schema:'straw-devnet/1',program:String(f.program),config:String(f.config.publicKey),tx:altered.serialize({requireAllSignatures:false,verifySignatures:false}).toString('base64')});
+ const altered=partial();altered.instructions[3].data.writeBigUInt64LE(101n,1);
+ const hostile=JSON.stringify({schema:'straw-devnet/2',program:String(f.program),config:String(f.config.publicKey),tx:altered.serialize({requireAllSignatures:false,verifySignatures:false}).toString('base64')});
  assert.throws(()=>inspectPayment(hostile,f.program,f.config.publicKey,f.bob.publicKey));
+});
+
+test('import rejects signer-approved changes to the canonical compute limit or fee',()=>{
+ const f=fixture();
+ for(const index of [0,1]){
+  const ix=f.pay(100);
+  if(index===0)ix[0].data.writeUInt32LE(1_400_000,1);else ix[1].data.writeBigUInt64LE(1_000_000n,1);
+  const tx=new Transaction({feePayer:f.alice.publicKey,recentBlockhash:f.svm.latestBlockhash()}).add(...ix);tx.partialSign(f.alice);
+  assert.throws(()=>inspectPayment(envelope(tx,f.program,f.config.publicKey),f.program,f.config.publicKey,f.bob.publicKey));
+ }
 });

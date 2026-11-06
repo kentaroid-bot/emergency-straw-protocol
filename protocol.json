@@ -2,7 +2,7 @@
   "id": "emergency-straw-protocol",
   "name": "藁一本の約束",
   "version": "0.2.0",
-  "status": "devnet-implementation-awaiting-deployment",
+  "status": "devnet-deployed",
   "license": "MIT",
   "purpose": "Give every person unconditional daily access to food while preserving compensation for providers; money must serve minimum survival. Leave a small forkable seed for humans and AI agents.",
   "issuance_principles": {
@@ -87,6 +87,11 @@
     "demonstration_day_seconds": 120,
     "identity_scope": "wallet-per-instance-not-unique-person",
     "deployment_manifest": "deployments/devnet.json",
-    "verification": "LiteSVM SBF tests passed; public Devnet and actual Phantom pending"
+    "verification": "18 local tests; public Devnet 120-second cycle; Phantom connection, enrollment, consumer signing, producer countersigning and transfer verified in Brave on daily instance",
+    "transport_schema": "straw-devnet/2",
+    "compute_budget": {
+      "units": 200000,
+      "micro_lamports_per_unit": 0
+    }
   }
 }
