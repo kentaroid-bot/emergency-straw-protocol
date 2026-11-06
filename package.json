@@ -1,10 +1,38 @@
 {
   "name": "emergency-straw-protocol",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "An offline concept mock: ephemeral daily allocation crystallizes into enduring producer credit at exchange.",
+  "description": "Daily 300 spending rights, minted on exchange: offline concept and Solana Devnet prototype.",
   "license": "MIT",
-  "scripts": {"start": "node serve.js", "test": "node --test model.test.js"},
-  "engines": {"node": ">=20"},
-  "keywords": ["emergency", "mutual-aid", "daily-allocation", "producer-credit", "offline", "concept", "ai-agents"]
+  "scripts": {
+    "start": "node serve.js",
+    "test": "node --test model.test.js tests/*.test.mjs",
+    "build": "node scripts/build-app.mjs",
+    "build:program": "cargo build-sbf",
+    "test:model": "node --test model.test.js",
+    "deploy:devnet": "node scripts/deploy-devnet.mjs",
+    "smoke:devnet": "node scripts/smoke-devnet.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "emergency",
+    "mutual-aid",
+    "daily-allocation",
+    "producer-credit",
+    "offline",
+    "concept",
+    "ai-agents"
+  ],
+  "dependencies": {
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
+    "bs58": "6.0.0",
+    "buffer": "6.0.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "litesvm": "1.6.2"
+  }
 }

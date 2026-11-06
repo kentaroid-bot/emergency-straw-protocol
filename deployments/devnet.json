@@ -1,0 +1,7 @@
+{
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "program": null,
+  "instances": {},
+  "status": "awaiting-devnet-deployment"
+}
