@@ -2,7 +2,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const files = {'/app/index.html':'app/index.html','/devnet':'app/index.html','/devnet/':'app/index.html','/devnet/style.css':'app/style.css',
+const files = {'/mock/':'index.html','/mock/model.js':'model.js','/mock/app/index.html':'app/index.html','/mock/README.md':'README.md','/mock/DESIGN.md':'DESIGN.md','/app/index.html':'app/index.html','/devnet':'app/index.html','/devnet/':'app/index.html','/devnet/style.css':'app/style.css',
   '/devnet/app.js':'dist/app.js','/devnet/deployment.json':'deployments/devnet.json','/':'index.html','/index.html':'index.html','/model.js':'model.js',
   '/README.md':'README.md','/DEVNET.md':'DEVNET.md','/DESIGN.md':'DESIGN.md','/llms.txt':'llms.txt','/protocol.json':'protocol.json'};
 const port = Number(process.env.PORT || 8787);

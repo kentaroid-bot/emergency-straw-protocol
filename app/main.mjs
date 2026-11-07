@@ -48,7 +48,7 @@ async function selectInstance(){generation++;instance=null;person=null;clockRead
  program=pk(manifest.program);config=pk(selected.config);await assertDevnet(connection);instance=await readInstance(connection,program,config);write('deployment',`Devnet · ${instance.period===120n?'120秒体験用':'一日循環'} · Mint ${instance.mint}`);
  if(wallet)await refresh();controls();}
 $('connect').onclick=()=>task(async()=>{
- provider=window.phantom?.solana;if(!provider?.isPhantom)throw Error('Phantom拡張を利用できるブラウザで開いてください。');
+ provider=window.phantom?.solana;if(!provider?.isPhantom)throw Error('PCではPhantom拡張のあるブラウザ、スマートフォンではPhantomアプリ内ブラウザで開いてください。');
  provider.removeListener?.('disconnect',clearWallet);provider.on('disconnect',clearWallet);
  provider.removeListener?.('accountChanged',accountChanged);provider.on('accountChanged',accountChanged);
  const result=await provider.connect();wallet=pk(result.publicKey);generation++;write('wallet',wallet.toBase58());if(instance)await refresh();notice('接続しました。');

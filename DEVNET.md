@@ -92,3 +92,11 @@ SPL Token自体は保有者によるburnも許すため、供給量の不変条�
 依存関係の監査（2026-11-06）ではnpmに9件（high 3 / moderate 6）が報告されています。highはSPL SDK経由の `bigint-buffer` のネイティブ変換、moderateはweb3.jsのRPC依存が中心で、SDKの破壊的変更なしに解消する更新はありません。この版では固定長のSPLデータのみを読むこと、ブラウザのネイティブbinding非使用、秘密鍵をブラウザへ渡さないことを確認しています。脆弱性を解消済みとは扱わず、Devnetテスト専用とします。実運用へ進む前に現行SDKへの移行・再検証・独立したセキュリティレビューが必要です。
 
 参照：[Solana Rust](https://solana.com/docs/programs/rust)、[PDA](https://solana.com/docs/core/pda)、[トランザクション](https://solana.com/docs/core/transactions)、[Devnet](https://solana.com/docs/references/clusters)、[Phantom接続](https://docs.phantom.com/solana/establishing-a-connection)。
+
+## 公開Web（2026-11-07）
+
+[藁一本の約束 · Devnet](https://straw-promise-devnet.kentaroid.chatgpt.site/) をブラウザで開ける。ChatGPTへのログインやローカルのビルドは不要。初回の準備、無料Devnet SOLの取得先、二人での支払い・受領手順を画面に記載した。同じ循環設定を選び、別のテスト用ウォレットで試す。受領のみなら参加登録は不要。自分の日次枠で支払う時に登録する。
+
+公開Webからも固定Devnet RPCへ直接接続し、ホスティング側は鍵や署名を保管しない。公開RPCの制限に当たった時は時間を置いて再読み込みする。多数同時接続向けの専用RPCはまだ設けていない。ホスティングの再現方法は[HOSTING.md](HOSTING.md)。
+
+PCではPhantom拡張、スマートフォンではPhantom内ブラウザを使用する。[公式のprovider仕様](https://docs.phantom.com/solana/detecting-the-provider)ではHTTPS上の両環境でproviderが注入される。モバイル実機での支払い循環は未検証。[Solana公開RPCの仕様・制限](https://solana.com/docs/references/clusters)も参照。

@@ -34,6 +34,12 @@ Daily allocation (expires) → actual exchange + acceptance → producer credit 
                   └─ unused at midnight → expires                └─ supplier / future production
 ```
 
+## Open the public Devnet app
+
+**[Try 藁一本の約束 in your browser](https://straw-promise-devnet.kentaroid.chatgpt.site/)** — no installation or ChatGPT sign-in required for the site. Use a Phantom test account and free Devnet SOL. The page includes a two-person walkthrough; choose the same daily or 120-second instance on both devices. The original [wallet-free mock](https://straw-promise-devnet.kentaroid.chatgpt.site/mock/) is also available.
+
+Desktop Phantom was verified in Brave. Mobile users can open the URL in Phantom's in-app browser; mobile hardware testing is still pending. [Hosting and rebuilding](HOSTING.md).
+
 ## Try it in a minute
 
 Download or clone this repository. Open `index.html` in a browser, keeping `model.js` beside it. No install, CDN, internet connection or build is needed. All demo state is in memory and resets on reload.
@@ -71,7 +77,7 @@ npm start
 
 The Devnet app provides Phantom connection, permissionless per-wallet enrollment, consumer-signed payment data, producer countersigning and issuance, and ordinary SPL credit transfers. Normal days roll over at midnight JST; a separate mint uses 120-second days for a quick demonstration. The consumer pays the transaction fee and the recipient account's rent. Enrollment itself mints nothing. Both parties sign each payment; the on-chain program enforces daily spending and a persistent nonce. Account creation, allowance consumption and minting commit atomically.
 
-`program/src/lib.rs` contains the native Rust program; `app/protocol.mjs` defines the client encoding and strict imported-transaction checks. `deployments/devnet.json` records the deployed program and mints. `deployments/devnet-smoke.json` contains transaction signatures for the verified public-network cycle; `deployments/phantom-check.json` records the separate browser check. Read [DEVNET.md](DEVNET.md) for building the SBF binary, local tests, dedicated Devnet keys, deployment, network smoke tests and the Phantom walkthrough. The new app needs the network and a localhost server; the old mock still works from disk.
+`program/src/lib.rs` contains the native Rust program; `app/protocol.mjs` defines the client encoding and strict imported-transaction checks. `deployments/devnet.json` records the deployed program and mints. `deployments/devnet-smoke.json` contains transaction signatures for the verified public-network cycle; `deployments/phantom-check.json` records the separate browser check. Read [DEVNET.md](DEVNET.md) for building the SBF binary, local tests, dedicated Devnet keys, deployment, network smoke tests and the Phantom walkthrough. The new app needs the network and either the public HTTPS site or a localhost server; the old mock still works from disk.
 
 ## Architecture and future Phantom / Solana path
 
