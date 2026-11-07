@@ -20,6 +20,9 @@ pub struct Config { tag: u8, creator: Pubkey, mint: Pubkey, period: i64, offset:
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct Person { tag: u8, config: Pubkey, wallet: Pubkey, day: i64, spent: u64, nonce: u64 }
 
+#[derive(BorshDeserialize)]
+struct MetadataInput { name: String, symbol: String, uri: String }
+
 // Custom errors: 0 invalid config, 1 invalid day, 2 limit, 3 nonce/replay,
 // 4 invalid amount, 5 invalid account, 6 self-payment, 7 clock rollback.
 fn err(code: u32) -> ProgramError { ProgramError::Custom(code) }
@@ -131,6 +134,38 @@ pub fn process_instruction(program: &Pubkey, accounts: &[AccountInfo], data: &[u
             invoke_signed(&spl_token::instruction::mint_to_checked(token.key,mint.key,destination.key,authority.key,&[],amount,0)?,
                 &[mint.clone(),destination.clone(),authority.clone(),token.clone()],
                 &[&[b"authority",cfg.key.as_ref(),&[bump]]])
+        },
+        // Add metadata to an EXISTING mint. Only its config creator may authorize this.
+        // The mint PDA stays the mint authority; no supply/allowance/account changes.
+        3 => {
+            let input=MetadataInput::try_from_slice(rest).map_err(|_|err(5))?;
+            require(!input.name.is_empty() && input.name.len()<=32 && !input.name.contains('\0'),5)?;
+            require(!input.symbol.is_empty() && input.symbol.len()<=10 && !input.symbol.contains('\0'),5)?;
+            require(input.uri.starts_with("https://") && input.uri.len()<=200 && !input.uri.contains('\0'),5)?;
+            let creator=next_account_info(&mut it)?; let cfg=next_account_info(&mut it)?;
+            let mint=next_account_info(&mut it)?; let authority=next_account_info(&mut it)?;
+            let metadata=next_account_info(&mut it)?; let mpl=next_account_info(&mut it)?;
+            let sys=next_account_info(&mut it)?; let instructions=next_account_info(&mut it)?;
+            let token=next_account_info(&mut it)?;
+            signer(creator)?; let c=config(cfg,program)?;
+            require(*creator.key==c.creator,5)?;
+            require(*mpl.key==mpl_token_metadata::ID && mpl.executable,5)?;
+            require(*sys.key==system_program::id() && *token.key==spl_token::id(),5)?;
+            require(*instructions.key==solana_program::sysvar::instructions::id(),5)?;
+            require(*mint.key==c.mint && mint.owner==token.key,5)?;
+            let (a,bump)=Pubkey::find_program_address(&[b"authority",cfg.key.as_ref()],program);
+            require(*authority.key==a,5)?;
+            let m=Mint::unpack(&mint.try_borrow_data()?)?;
+            require(m.mint_authority==COption::Some(a) && m.decimals==0 && m.freeze_authority==COption::None,5)?;
+            let (expected,_)=mpl_token_metadata::accounts::Metadata::find_pda(mint.key);
+            require(*metadata.key==expected && metadata.owner==&system_program::id() && metadata.data_is_empty(),5)?;
+            mpl_token_metadata::instructions::CreateV1CpiBuilder::new(mpl)
+                .metadata(metadata).mint(mint,false).authority(authority).payer(creator)
+                .update_authority(creator,true).system_program(sys).sysvar_instructions(instructions)
+                .spl_token_program(Some(token)).name(input.name).symbol(input.symbol).uri(input.uri)
+                .seller_fee_basis_points(0).primary_sale_happened(false).is_mutable(true)
+                .token_standard(mpl_token_metadata::types::TokenStandard::Fungible).decimals(0)
+                .invoke_signed(&[&[b"authority",cfg.key.as_ref(),&[bump]]])
         },
         _ => Err(ProgramError::InvalidInstructionData),
     }

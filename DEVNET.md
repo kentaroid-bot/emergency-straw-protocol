@@ -30,7 +30,7 @@ npm start
 
 ```sh
 npm ci
-cargo build-sbf --locked
+cargo build-sbf -- --locked
 npm test
 npm run deploy:devnet
 ```

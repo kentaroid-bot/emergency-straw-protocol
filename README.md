@@ -16,6 +16,12 @@ The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens min
 
 ![The next morning: consumer allocation is renewed, producer credit remains](docs/mock.jpg)
 
+## 本トークンの名前：WARA
+
+翌日も残る本トークン（生産者クレジット）の名前は **WARA**。深い緑に金色の藁が輪を描くアイコンを使います。日次枠は「今日の300の枠」のままで、使った分だけ相手にWARAが発行されます。
+
+Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devnet Demo / WARA-DEMO** と区別します。どちらも金銭的価値のないテストトークンです。[画像・メタデータの設計と確認方法](TOKEN-METADATA.md)。
+
 ## 紹介文：体験してみませんか？
 
 🌾 **藁一本の約束 — 体験してみませんか？**
