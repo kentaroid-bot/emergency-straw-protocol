@@ -11,6 +11,8 @@
 
 画像の原本・生成プロンプト・配信方針は[assets/README.md](assets/README.md)。名前・シンボル・JSONのURIはMetaplexのMetadataアカウントに記録し、JSONから画像を参照する。JSONと画像は公開GitHubのraw URLで配信する。
 
+**2026-11-07：両Mintへの登録完了。** [オンチェーン照合記録](deployments/devnet-metadata.json)にMetadataアドレス、登録トランザクション、画像ハッシュを保存。登録前後で供給量・トークン口座・プロトコル状態の一致を確認した。BraveのPhantom（テストネットモード）でも、通常版の藁の輪アイコン、`WARA Devnet`、既存の `90 WARA` 残高を確認済み。120秒体験版はオンチェーン照合済みで、Phantom上の表示は未確認。
+
 ## 権限と既存残高
 
 既存Mintをそのまま使う。プログラムの命令3は設定作成者の署名を要求し、Mintに紐づくPDAの署名でMetaplex `CreateV1` を呼ぶ。相手プログラムID、Metadata PDA、Mint、発行権限、System/TokenプログラムとInstructions sysvarを検証する。既存Metadataの上書きはこの命令ではできない。

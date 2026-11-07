@@ -22,6 +22,8 @@ The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens min
 
 Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devnet Demo / WARA-DEMO** と区別します。どちらも金銭的価値のないテストトークンです。[画像・メタデータの設計と確認方法](TOKEN-METADATA.md)。
 
+2026-11-07：既存の両Mintへ名前・画像を登録済み。通常版はPhantomでもアイコン付きの「WARA Devnet」と既存の90 WARA残高を確認しました。
+
 ## 紹介文：体験してみませんか？
 
 🌾 **藁一本の約束 — 体験してみませんか？**
