@@ -92,3 +92,20 @@ test('import rejects signer-approved changes to the canonical compute limit or f
   assert.throws(()=>inspectPayment(envelope(tx,f.program,f.config.publicKey),f.program,f.config.publicKey,f.bob.publicKey));
  }
 });
+
+test('signed return QR survives optical encode/decode and settles once with both signatures',async()=>{
+ const {roundtrip}=await import('./qr-roundtrip.mjs');
+ const {inspectReturnQR}=await import('../app/qr-protocol.mjs');
+ const f=fixture();
+ const tx=new Transaction({feePayer:f.alice.publicKey,recentBlockhash:f.svm.latestBlockhash()}).add(...f.pay(100));tx.partialSign(f.alice);
+ const raw=envelope(tx,f.program,f.config.publicKey),decoded=roundtrip(raw);
+ assert.equal(decoded,raw);assert(Buffer.byteLength(raw)<=2000);
+ const parsed=inspectReturnQR(decoded,f.program,f.config.publicKey,f.bob.publicKey);
+ assert.equal(f.supply(),0n);assert.equal(parsed.value,100n);
+ assert.throws(()=>inspectReturnQR(decoded,f.program,f.config.publicKey,f.carol.publicKey));
+ assert.throws(()=>inspectReturnQR(' '.repeat(2001),f.program,f.config.publicKey,f.bob.publicKey));
+ parsed.tx.partialSign(f.bob);assert(parsed.tx.verifySignatures());
+ const chainTx=getTransactionDecoder().decode(parsed.tx.serialize());
+ f.ok(f.svm.sendTransaction(chainTx));assert.equal(f.state().spent,100n);assert.equal(f.balance(f.bob),100n);assert.equal(f.supply(),100n);
+ f.fail(f.svm.sendTransaction(chainTx));assert.equal(f.supply(),100n);
+});

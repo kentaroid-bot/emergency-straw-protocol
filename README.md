@@ -132,6 +132,21 @@ Daily allocation (expires) → actual exchange + acceptance → producer credit 
 
 Desktop Phantom was verified in Brave. Mobile users can open the URL in Phantom's in-app browser; mobile hardware testing is still pending. [Hosting and rebuilding](HOSTING.md).
 
+### アドレスを打たずに、QRでお会計
+
+1. **店側**：Phantomに接続し、「お会計QRを出す」で金額を入れてQRを作ります。
+2. **買う人**：「お会計QRを読む」でカメラを向けるか、保存したQR画像を選びます。宛先・金額が自動入力されるので、店頭の相手と金額を確認してチェックします。
+3. **今日の枠で払う場合**：Phantomで署名すると、買う人の画面に返送QRが出ます。店側が読み取り、「内容を確認」→受領に署名すると、日次枠の消費と同額のWARA発行が一緒に成立します。
+4. **持っているWARAで払う場合**：買う人の署名で直接送信します。返送QR・店側の署名は不要。店側は「残高を更新」で着金を確認します。
+
+QRを読むだけでは支払いません。双方で同じ「一日」または「120秒」を選びます。お会計QRは10分間、署名済みの返送QRは通常約1分の別の期限です。返送QRは日付変更や処理済みでも無効になります。送信結果が不明な時は、操作記録のExplorerと残高を確認してから作り直してください。
+
+QRは**このアプリ専用**で、Phantomの一般的なQRリーダーやSolana Payとの互換を意味しません。店名は自己申告で、本人確認済みの表示ではありません。請求書番号や「支払済み」の自動照合は未実装のため、店側は毎回、相手・金額・着金を照合します。お会計QRの10分は画面側の入力期限であり、署名済み取引のチェーン上の期限を変更するものではありません。
+
+カメラはボタンを押した時だけ開始し、読取完了・閉じる操作・画面を離れた時に停止します。映像や選択画像は端末内で処理し、外部へアップロードしません。カメラが使えない場合はPNG・JPEG・WebP画像（10MB以下）の選択、または詳細欄の手入力／コピーを使えます。読み取りには `qrcode` / `jsqr` をアプリに同梱し、外部CDNを使いません。
+
+検証：QRの生成→読取、異なる設定・期限切れ・不正な入力の拒否、署名済み返送QR→双方署名→LiteSVMで100の発行と再送拒否を確認。ブラウザでQR画像から宛先・金額が入る操作を確認。スマートフォン2台でのカメラ読み取りとPhantom往復操作は未検証です。
+
 ## Try it in a minute
 
 Download or clone this repository. Open `index.html` in a browser, keeping `model.js` beside it. No install, CDN, internet connection or build is needed. All demo state is in memory and resets on reload.
@@ -184,7 +199,7 @@ Consumer / Phantom (candidate)
   → reconnect → submit to RPC → reconcile final outcome
 ```
 
-The original `index.html` / `model.js` mock remains a one-browser simulation, with `signed: false` and `simulation: true`. The separate Devnet app uses genuine serialized Solana transactions and cryptographic signatures. Its current transport is copy/paste, with ordinary blockhash expiry; it does not implement long-delayed offline acceptance or BLE/QR.
+The original `index.html` / `model.js` mock remains a one-browser simulation, with `signed: false` and `simulation: true`. The separate Devnet app uses genuine serialized Solana transactions and cryptographic signatures. It now supports application-specific checkout and signed-return QR codes, with copy/paste as a fallback. Ordinary blockhash expiry still applies; long-delayed offline acceptance and BLE remain unimplemented.
 
 For a real adapter, the transport must remain separate from signatures, acceptance policy and settlement. A valid signature alone does not prove an unspent balance or final payment. Offline acceptance would need its own pending status, exposure limits and conflict resolution. Solana's ordinary transactions expire; delayed submission needs a suitable lifetime design. [Solana transaction confirmation](https://solana.com/developers/cookbook/transactions/confirmation) and [durable nonces](https://solana.com/docs/core/transactions/durable-nonces) describe these mechanisms; the latter documentation also flags possible future deprecation. Select and verify a supported approach when implementing the adapter.
 
