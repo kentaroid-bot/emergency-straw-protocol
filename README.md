@@ -10,7 +10,7 @@ A small, temporary local economic order, kept as a contingency for the unlikely 
 
 Leave one straw within reach of the people—and AI agents—who might need to finish it. If that day never comes, it can simply remain here.
 
-**Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Deployed on public Devnet, with the full 120-second day cycle verified on-chain. Phantom connection, enrollment, payment signing, countersigning and credit transfer have also been verified in Brave. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
+**Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Deployed on public Devnet, with the full 120-second day cycle verified on-chain. The current payment flow needs only the consumer's signature; merchant countersigning and return QR codes have been removed. Earlier Brave checks of the two-signature flow are historical; see the verification scope in DEVNET.md. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
 
 The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens minted only when a payment is accepted**. Unused allowance is an expiring right, never pre-minted supply. Earned producer credit persists. The Devnet prototype enforces this per wallet; unique-person enrollment remains future work.
 
@@ -37,7 +37,7 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 どちらもSolanaのブロックチェーン上で管理します。Webアプリは操作の窓口で、本トークンは対応する別アプリからも送れます。
 
-**試すには、PCのPhantomと無料のDevnet SOLを用意し、二人で画面の案内に沿って操作してください。**「120秒を一日」の設定なら、枠の更新とトークンが残る様子を短時間で体験できます。実際のお金や商品は使いません。
+**店側のお会計QRを読み、買う人が支払い方法を選んでPhantomで署名。店側は着金を確認するだけです。** PCのPhantomと無料のDevnet SOLを用意し、二人で画面の案内に沿って試せます。「120秒を一日」の設定なら、枠の更新とトークンが残る様子を短時間で体験できます。実際のお金や商品は使いません。
 
 👉 [藁一本の約束を試す](https://straw-promise-devnet.kentaroid.chatgpt.site/)
 
@@ -47,7 +47,7 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 ## 現在の上限と今後の課題：一人一日300へ
 
-**現在のDevnet版は、同じ循環設定につき「1ウォレットに1日300」です。「一人に1日300」を保証する仕組みは、まだありません。** 同じ人が3つのウォレットを登録すれば、合計900の枠を使えます。登録だけで本トークンを発行することはなく、支払いが相手に受領され、チェーン上で成立した分だけ発行します。120秒体験版では、この「1日」を120秒として扱います。
+**現在のDevnet版は、同じ循環設定につき「1ウォレットに1日300」です。「一人に1日300」を保証する仕組みは、まだありません。** 同じ人が3つのウォレットを登録すれば、合計900の枠を使えます。登録だけで本トークンを発行することはなく、買う人が署名した支払いがチェーン上で成立した分だけ発行します。120秒体験版では、この「1日」を120秒として扱います。
 
 目指すのは、すべての人に一人一日300の枠を届けることです。今後は人とウォレットを分けて管理し、同じ人の複数ウォレットに共通の使用上限を適用する必要があります。同じ人の重複登録を防ぐこと、ウォレットの紛失・交換でも使用履歴を引き継ぐことが課題です。
 
@@ -89,7 +89,7 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 | 種類 | チェーン上の記録 | このWebアプリ以外からの利用 |
 |---|---|---|
-| 今日の300の枠 | プロトコルの参加者アカウントに利用日・累計使用額を記録。チェーンの日時と合わせて残り枠を算出 | 枠そのものは送金できない。同じプログラムと循環設定を使う別クライアントから、同じ上限・双方の署名条件に従って支払える |
+| 今日の300の枠 | プロトコルの参加者アカウントに利用日・累計使用額を記録。チェーンの日時と合わせて残り枠を算出 | 枠そのものは送金できない。同じプログラムと循環設定を使う別クライアントから、同じ上限と買う人の署名条件に従って支払える |
 | 本トークン（生産者クレジット） | ウォレットに紐づくSPLトークン口座に残高を記録 | 同じDevnet・同じMintに対応した別アプリやCLIから送れる。所有者の署名と手数料用Devnet SOLが必要 |
 
 ### 日次枠で100を支払う流れ
@@ -97,7 +97,7 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 **日次枠を消費すると、相手に同額の本トークンが新しく発行されます。**
 
 1. 支払う人が、日次枠から100を支払うデータに署名します。この時点ではまだ未決済で、枠も減りません。
-2. 相手も受領に署名し、取引をブロックチェーンへ送信します。
+2. アプリがそのまま取引をブロックチェーンへ送信します。店側の署名は不要です。
 3. 取引が成立すると、支払う人の残り枠は **300 → 200** になり、相手に **100の本トークンが新しく発行** されます。
 
 枠の消費と本トークンの発行は、一つの取引で一緒に成立します。日次枠はまだトークンではないため、「バーン（トークンの焼却）」ではなく「枠の消費」です。枠自体を相手に送る処理ではありません。
@@ -132,20 +132,22 @@ Daily allocation (expires) → actual exchange + acceptance → producer credit 
 
 Desktop Phantom was verified in Brave. Mobile users can open the URL in Phantom's in-app browser; mobile hardware testing is still pending. [Hosting and rebuilding](HOSTING.md).
 
+Current single-signer check: checkout QR image → Phantom → direct Devnet payment of 10, followed by a 1 WARA transfer through the same button. No merchant signature was requested. [Verification receipt](deployments/phantom-single-signer.json).
+
 ### アドレスを打たずに、QRでお会計
 
 1. **店側**：Phantomに接続し、「お会計QRを出す」で金額を入れてQRを作ります。
 2. **買う人**：「お会計QRを読む」でカメラを向けるか、保存したQR画像を選びます。宛先・金額が自動入力されるので、店頭の相手と金額を確認してチェックします。
-3. **今日の枠で払う場合**：Phantomで署名すると、買う人の画面に返送QRが出ます。店側が読み取り、「内容を確認」→受領に署名すると、日次枠の消費と同額のWARA発行が一緒に成立します。
-4. **持っているWARAで払う場合**：買う人の署名で直接送信します。返送QR・店側の署名は不要。店側は「残高を更新」で着金を確認します。
+3. **買う人**：日次枠か持っているWARAかを選び、「支払う」からPhantomで署名します。日次枠なら枠の消費と相手への新規発行、WARAなら既存残高の移動を、アプリが選んだ方法に合わせて送信します。
+4. **店側**：「着金を確認する」で残高を更新。どちらの方法でも、返送QRや受領署名は不要です。
 
-QRを読むだけでは支払いません。双方で同じ「一日」または「120秒」を選びます。お会計QRは10分間、署名済みの返送QRは通常約1分の別の期限です。返送QRは日付変更や処理済みでも無効になります。送信結果が不明な時は、操作記録のExplorerと残高を確認してから作り直してください。
+QRを読むだけでは支払いません。双方で同じ「一日」または「120秒」を選びます。お会計QRは10分間有効です。署名した取引はそのまま送信します。署名中の日付変更や取引の有効期限切れはチェーンで拒否されます。送信結果が不明な時は、操作記録のExplorerと残高を確認してから作り直してください。
 
 QRは**このアプリ専用**で、Phantomの一般的なQRリーダーやSolana Payとの互換を意味しません。店名は自己申告で、本人確認済みの表示ではありません。請求書番号や「支払済み」の自動照合は未実装のため、店側は毎回、相手・金額・着金を照合します。お会計QRの10分は画面側の入力期限であり、署名済み取引のチェーン上の期限を変更するものではありません。
 
-カメラはボタンを押した時だけ開始し、読取完了・閉じる操作・画面を離れた時に停止します。映像や選択画像は端末内で処理し、外部へアップロードしません。カメラが使えない場合はPNG・JPEG・WebP画像（10MB以下）の選択、または詳細欄の手入力／コピーを使えます。読み取りには `qrcode` / `jsqr` をアプリに同梱し、外部CDNを使いません。
+カメラはボタンを押した時だけ開始し、読取完了・閉じる操作・画面を離れた時に停止します。映像や選択画像は端末内で処理し、外部へアップロードしません。カメラが使えない場合はPNG・JPEG・WebP画像（10MB以下）の選択、または詳細欄のアドレス手入力を使えます。読み取りには `qrcode` / `jsqr` をアプリに同梱し、外部CDNを使いません。
 
-検証：QRの生成→読取、異なる設定・期限切れ・不正な入力の拒否、署名済み返送QR→双方署名→LiteSVMで100の発行と再送拒否を確認。ブラウザでQR画像から宛先・金額が入る操作を確認。スマートフォン2台でのカメラ読み取りとPhantom往復操作は未検証です。
+検証：QR生成→読取と不正な入力の拒否、買う人だけの署名による発行、累計300の上限、同一取引・使用済みnonceの拒否をローカルで確認。Devnet検証記録は `deployments/devnet-smoke.json`。スマートフォン2台でのカメラ操作は未検証です。
 
 ## Try it in a minute
 
@@ -182,9 +184,9 @@ npm start
 # http://127.0.0.1:8787/devnet/
 ```
 
-The Devnet app provides Phantom connection, permissionless per-wallet enrollment, consumer-signed payment data, producer countersigning and issuance, and ordinary SPL credit transfers. Normal days roll over at midnight JST; a separate mint uses 120-second days for a quick demonstration. The consumer pays the transaction fee and the recipient account's rent. Enrollment itself mints nothing. Both parties sign each payment; the on-chain program enforces daily spending and a persistent nonce. Account creation, allowance consumption and minting commit atomically.
+The Devnet app provides Phantom connection, permissionless per-wallet enrollment, consumer-only signed payments and issuance, and ordinary SPL credit transfers. Normal days roll over at midnight JST; a separate mint uses 120-second days for a quick demonstration. The consumer pays the transaction fee and the recipient account's rent. Enrollment itself mints nothing. Only the consumer signs each daily payment; the on-chain program enforces daily spending and a persistent nonce. Account creation, allowance consumption and minting commit atomically.
 
-`program/src/lib.rs` contains the native Rust program; `app/protocol.mjs` defines the client encoding and strict imported-transaction checks. `deployments/devnet.json` records the deployed program and mints. `deployments/devnet-smoke.json` contains transaction signatures for the verified public-network cycle; `deployments/phantom-check.json` records the separate browser check. Read [DEVNET.md](DEVNET.md) for building the SBF binary, local tests, dedicated Devnet keys, deployment, network smoke tests and the Phantom walkthrough. The new app needs the network and either the public HTTPS site or a localhost server; the old mock still works from disk.
+`program/src/lib.rs` contains the native Rust program; `app/protocol.mjs` defines the client encoding. `deployments/devnet.json` records the deployed program and mints. `deployments/devnet-smoke.json` contains transaction signatures for the verified public-network cycle; `deployments/phantom-check.json` records the separate browser check. Read [DEVNET.md](DEVNET.md) for building the SBF binary, local tests, dedicated Devnet keys, deployment, network smoke tests and the Phantom walkthrough. The new app needs the network and either the public HTTPS site or a localhost server; the old mock still works from disk.
 
 ## Architecture and future Phantom / Solana path
 
@@ -199,7 +201,7 @@ Consumer / Phantom (candidate)
   → reconnect → submit to RPC → reconcile final outcome
 ```
 
-The original `index.html` / `model.js` mock remains a one-browser simulation, with `signed: false` and `simulation: true`. The separate Devnet app uses genuine serialized Solana transactions and cryptographic signatures. It now supports application-specific checkout and signed-return QR codes, with copy/paste as a fallback. Ordinary blockhash expiry still applies; long-delayed offline acceptance and BLE remain unimplemented.
+The original `index.html` / `model.js` mock remains a one-browser simulation, with `signed: false` and `simulation: true`. The separate Devnet app uses genuine serialized Solana transactions and cryptographic signatures. It supports application-specific checkout QR codes. The buyer signs and broadcasts directly; there is no signed-return QR or merchant-signing step. Ordinary blockhash expiry still applies; long-delayed offline acceptance and BLE remain unimplemented.
 
 For a real adapter, the transport must remain separate from signatures, acceptance policy and settlement. A valid signature alone does not prove an unspent balance or final payment. Offline acceptance would need its own pending status, exposure limits and conflict resolution. Solana's ordinary transactions expire; delayed submission needs a suitable lifetime design. [Solana transaction confirmation](https://solana.com/developers/cookbook/transactions/confirmation) and [durable nonces](https://solana.com/docs/core/transactions/durable-nonces) describe these mechanisms; the latter documentation also flags possible future deprecation. Select and verify a supported approach when implementing the adapter.
 
@@ -212,7 +214,7 @@ For the optional disconnected fallback, the original emergency trade-off is to a
 Before real use, a fork needs to resolve these concrete questions:
 
 - **Replay / double spending:** the original mock rejects repeat receipt in one process. The Devnet program enforces per-wallet spending and nonce replay protection in shared on-chain state. Disconnected acceptance still needs reconciliation and an explicit allocation of merchant losses. A later rejection does not return already-delivered food.
-- **False trades:** an authorized merchant address is not evidence that goods were delivered. Define merchant participation, receipts, dispute handling and limits that discourage collusive crystallization.
+- **False trades:** recipient consent and real delivery are not verified on-chain. Removing the merchant signature allows payment to any other valid wallet's token account; multiple wallets controlled by one person can convert allowance into persistent WARA. Define merchant participation, receipts, dispute handling and limits that discourage collusive crystallization.
 - **Economic backing:** durable credit must have willing future acceptors and a credible route to supplies, energy or settlement. Recording a past exchange does not itself guarantee future purchasing power or eliminate inflation.
 - **Universal access and supply:** make one daily allocation reach each person, including people without smartphones or documents. Prevent duplicate issuance without introducing means tests, work requirements or proof of hardship. Determine real stock, the amount needed for a day's food and provider participation rules. The demo's 300 points is illustrative. Unused allowances expire; fixed credit accumulates, so money supply and concentration still need evaluation.
 - **Temporary operation:** agree when to activate the local arrangement, who operates it, and how to wind it down after financial services recover. Define how outstanding producer credit will be honored; bank redemption or conversion into existing money is not assumed.

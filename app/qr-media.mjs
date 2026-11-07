@@ -2,7 +2,7 @@ import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import {MAX_QR_BYTES} from './qr-protocol.mjs';
 export async function qrImage(text){
- if(new TextEncoder().encode(text).length>MAX_QR_BYTES)throw Error('QRに収まらないため、詳細欄のデータをコピーして渡してください。');
+ if(new TextEncoder().encode(text).length>MAX_QR_BYTES)throw Error('QRに収まらないため、表示名を短くして作り直してください。');
  return QRCode.toDataURL(text,{errorCorrectionLevel:'M',margin:4,scale:6,color:{dark:'#000000',light:'#ffffff'}});
 }
 export function createScanner({video,canvas,onValue,onStatus,onStop}){

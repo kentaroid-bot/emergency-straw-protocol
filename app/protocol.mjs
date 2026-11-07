@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import {PublicKey, SystemProgram, ComputeBudgetProgram, Transaction, TransactionInstruction, SYSVAR_CLOCK_PUBKEY} from '@solana/web3.js';
+import {PublicKey, SystemProgram, ComputeBudgetProgram, TransactionInstruction, SYSVAR_CLOCK_PUBKEY} from '@solana/web3.js';
 import {TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, createAssociatedTokenAccountIdempotentInstruction} from '@solana/spl-token';
 export const DEVNET_GENESIS='EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG';
 export const CONFIG_LEN=81, PERSON_LEN=89, LIMIT=300n;
@@ -41,7 +41,7 @@ export function paymentInstructions(program,config,consumer,producer,value,day,n
  const dest=getAssociatedTokenAddressSync(mint,pk(producer));
  const data=Buffer.alloc(25);data[0]=2;data.writeBigUInt64LE(BigInt(value),1);data.writeBigInt64LE(BigInt(day),9);data.writeBigUInt64LE(BigInt(nonce),17);
  return [...budgetInstructions(),createAssociatedTokenAccountIdempotentInstruction(pk(consumer),dest,pk(producer),mint),
- new TransactionInstruction({programId:pk(program),keys:[key(consumer,true,true),key(producer,true),key(config),key(person,false,true),key(mint,false,true),key(dest,false,true),key(authority),key(TOKEN_PROGRAM_ID)],data})];
+ new TransactionInstruction({programId:pk(program),keys:[key(consumer,true,true),key(producer),key(config),key(person,false,true),key(mint,false,true),key(dest,false,true),key(authority),key(TOKEN_PROGRAM_ID)],data})];
 }
 export async function assertDevnet(connection){
  if(await connection.getGenesisHash()!==DEVNET_GENESIS)throw Error('Devnet以外への接続を拒否しました。');
@@ -62,23 +62,3 @@ export async function readPerson(connection,program,config,wallet){
  if(!a.owner.equals(pk(program)))throw Error('参加アカウントの所有者が不正です。');
  const s=decodePerson(a.data);if(!s.wallet.equals(pk(wallet))||!s.config.equals(pk(config)))throw Error('参加アカウントが一致しません。');return s;
 }
-// An imported partial transaction is hostile input. Reconstruct the entire allowed
-// message before showing a signing action; never let payloads add arbitrary instructions.
-export function inspectPayment(raw,program,config,producer){
- if(typeof raw!=='string'||raw.length>4000)throw Error('支払データの長さが不正です。');
- const envelope=JSON.parse(raw);
- if(envelope.schema!=='straw-devnet/2'||envelope.program!==String(program)||envelope.config!==String(config)||typeof envelope.tx!=='string')throw Error('別の設定の支払いです。');
- const tx=Transaction.from(Buffer.from(envelope.tx,'base64'));
- if(tx.instructions.length!==4)throw Error('許可していない命令が含まれています。');
- const ix=tx.instructions[3];if(!ix.programId.equals(pk(program))||ix.data.length!==25||ix.data[0]!==2||ix.keys.length!==8)throw Error('支払命令が不正です。');
- const consumer=ix.keys[0].pubkey,recipient=ix.keys[1].pubkey;
- if(!recipient.equals(pk(producer))||consumer.equals(recipient))throw Error('受取人のウォレットに切り替えてください。');
- const value=ix.data.readBigUInt64LE(1),day=ix.data.readBigInt64LE(9),nonce=ix.data.readBigUInt64LE(17);
- if(value<1n||value>LIMIT||!tx.feePayer?.equals(consumer))throw Error('金額または手数料支払者が不正です。');
- const expected=new Transaction({feePayer:consumer,recentBlockhash:tx.recentBlockhash}).add(...paymentInstructions(program,config,consumer,recipient,value,day,nonce));
- if(!tx.serializeMessage().equals(expected.serializeMessage()))throw Error('支払い以外の操作を検出しました。');
- const sig=tx.signatures.find(s=>s.publicKey.equals(consumer));
- if(!sig?.signature||!tx.verifySignatures(false))throw Error('支払者の署名が不正です。');
- return {tx,consumer,producer:recipient,value,day,nonce};
-}
-export function envelope(tx,program,config){return JSON.stringify({schema:'straw-devnet/2',program:String(program),config:String(config),tx:tx.serialize({requireAllSignatures:false}).toString('base64')});}

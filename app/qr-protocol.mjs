@@ -1,5 +1,4 @@
 import {PublicKey} from '@solana/web3.js';
-import {inspectPayment} from './protocol.mjs';
 export const REQUEST_SCHEMA='wara-devnet/request/1', REQUEST_TTL=600_000;
 export const MAX_QR_BYTES=2000;
 const key=x=>{if(typeof x!=='string'||x.length>44)throw Error('QRのアドレスが不正です。');const k=new PublicKey(x);if(k.toBase58()!==x)throw Error('QRのアドレスが不正です。');return k;};
@@ -19,8 +18,4 @@ export function parseRequest(raw,context,now=Date.now()){
 export function createRequest(context,recipient,amount,label='',now=Date.now()){
  const r={schema:REQUEST_SCHEMA,cluster:'devnet',program:String(context.program),config:String(context.config),mint:String(context.mint),recipient:String(recipient),amount:String(amount),label:label.trim(),createdAt:now,expiresAt:now+REQUEST_TTL};
  return JSON.stringify(parseRequest(JSON.stringify(r),context,now));
-}
-export function inspectReturnQR(raw,program,config,recipient){
- if(typeof raw!=='string'||new TextEncoder().encode(raw).length>MAX_QR_BYTES)throw Error('支払QRのサイズが不正です。');
- return inspectPayment(raw,program,config,recipient);
 }

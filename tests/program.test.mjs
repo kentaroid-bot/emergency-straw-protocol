@@ -4,7 +4,7 @@ import {LiteSVM,FailedTransactionMetadata} from 'litesvm';
 import {getTransactionDecoder} from '@solana/kit';
 import {Keypair,Transaction,SystemProgram} from '@solana/web3.js';
 import {getAssociatedTokenAddressSync,createAssociatedTokenAccountIdempotentInstruction,createTransferCheckedInstruction,createMintToCheckedInstruction} from '@solana/spl-token';
-import {addresses,initInstructions,enrollInstruction,paymentInstructions,decodePerson,decodeConfig,currentDay,remaining,inspectPayment,envelope} from '../app/protocol.mjs';
+import {addresses,initInstructions,enrollInstruction,paymentInstructions,decodePerson,decodeConfig,currentDay,remaining} from '../app/protocol.mjs';
 
 function fixture(period=86400){
  const svm=new LiteSVM(),program=Keypair.generate().publicKey,config=Keypair.generate(),alice=Keypair.generate(),bob=Keypair.generate(),carol=Keypair.generate();
@@ -27,85 +27,65 @@ function fixture(period=86400){
 }
 test('300 cumulative limit; only accepted payments issue credit; replay and reenrollment fail',()=>{
  const f=fixture();const {send,ok,fail,pay,alice,bob,program,config,state,supply}=f;
- assert.equal(supply(),0n);ok(send(pay(100),[alice,bob]));assert.equal(supply(),100n);assert.equal(state().spent,100n);
- fail(send(pay(100,0n),[alice,bob]));fail(send(pay(201),[alice,bob]));
+ assert.equal(supply(),0n);ok(send(pay(100),[alice]));assert.equal(supply(),100n);assert.equal(state().spent,100n);
+ fail(send(pay(100,0n),[alice]));fail(send(pay(201),[alice]));
  fail(send([enrollInstruction(program,config.publicKey,alice.publicKey)]));
  assert.equal(supply(),100n);assert.equal(state().nonce,1n);
- ok(send(pay(200),[alice,bob]));fail(send(pay(1),[alice,bob]));assert.equal(supply(),300n);
+ ok(send(pay(200),[alice]));fail(send(pay(1),[alice]));assert.equal(supply(),300n);
 });
 test('JST day boundary expires only capacity; credits survive, transfer, next payment mints',()=>{
  const f=fixture();const {svm,send,ok,fail,pay,alice,bob,carol,mint,state,day,supply,balance}=f;
- ok(send(pay(300),[alice,bob]));const oldDay=day();const clock=svm.getClock();
+ ok(send(pay(300),[alice]));const oldDay=day();const clock=svm.getClock();
  clock.unixTimestamp=(oldDay+1n)*86400n-32400n-1n;svm.setClock(clock);assert.equal(remaining(state(),day()),0n);
  clock.unixTimestamp++;svm.setClock(clock);assert.equal(remaining(state(),day()),300n);assert.equal(supply(),300n);
- fail(send(pay(1,state().nonce,oldDay),[alice,bob]));
+ fail(send(pay(1,state().nonce,oldDay),[alice]));
  const src=getAssociatedTokenAddressSync(mint,bob.publicKey),dst=getAssociatedTokenAddressSync(mint,carol.publicKey);
  ok(send([createAssociatedTokenAccountIdempotentInstruction(bob.publicKey,dst,carol.publicKey,mint),createTransferCheckedInstruction(src,mint,dst,bob.publicKey,50n,0)],[bob]));
  assert.equal(balance(bob),250n);assert.equal(balance(carol),50n);assert.equal(supply(),300n);
- ok(send(pay(50),[alice,bob]));assert.equal(state().spent,50n);assert.equal(supply(),350n);
+ ok(send(pay(50),[alice]));assert.equal(state().spent,50n);assert.equal(supply(),350n);
 });
-test('both signatures, recipient ownership, positive integer amount, and mint authority are enforced',()=>{
+test('consumer signature, recipient ownership, positive integer amount, and mint authority are enforced',()=>{
  const f=fixture();const {send,fail,pay,alice,bob,carol,mint,authority,supply,state}=f;
- // Precreate the recipient account, then strip each signer flag from Pay alone.
+ // Precreate the recipient account. A merchant cannot spend the consumer allowance.
  f.ok(send([pay(10)[2]],[alice]));
- for(const index of [0,1]){const ix=pay(10)[3];ix.keys[index].isSigner=false;fail(send([ix],index===1?[alice]:[bob]));}
- fail(send(pay(0),[alice,bob]));fail(send(pay(301),[alice,bob]));fail(send(pay(10,state().nonce,f.day(),alice),[alice]));
- const mismatch=pay(10);mismatch[3].keys[1].pubkey=carol.publicKey;fail(send(mismatch,[alice,carol]));
+ const ix=pay(10)[3];ix.keys[0].isSigner=false;fail(send([ix],[bob]));
+ fail(send(pay(0),[alice]));fail(send(pay(301),[alice]));fail(send(pay(10,state().nonce,f.day(),alice),[alice]));
+ const mismatch=pay(10);mismatch[3].keys[1].pubkey=carol.publicKey;fail(send(mismatch,[alice]));
  const mintIx=createMintToCheckedInstruction(mint,getAssociatedTokenAddressSync(mint,bob.publicKey),authority,1000n,0);mintIx.keys[2].isSigner=false;
  fail(send([pay(1)[2],mintIx],[alice]));assert.equal(supply(),0n);assert.equal(state().spent,0n);
 });
 test('two conflicting payments, transaction atomicity and cross-instance state',()=>{
  const f=fixture();const {send,ok,fail,pay,alice,bob,state,supply,program,config}=f;
- const a=pay(200),b=pay(200);ok(send(a,[alice,bob]));fail(send(b,[alice,bob]));assert.equal(supply(),200n);
+ const a=pay(200),b=pay(200);ok(send(a,[alice]));fail(send(b,[alice]));assert.equal(supply(),200n);
  // First instruction would succeed, but second exceeds cap: both must roll back.
- fail(send([...pay(50),...pay(100,state().nonce+1n).slice(2)],[alice,bob]));assert.equal(state().spent,200n);assert.equal(supply(),200n);
+ fail(send([...pay(50),...pay(100,state().nonce+1n).slice(2)],[alice]));assert.equal(state().spent,200n);assert.equal(supply(),200n);
  const other=Keypair.generate();ok(send(initInstructions(program,other.publicKey,alice.publicKey,120,Number(f.svm.minimumBalanceForRentExemption(81n))),[alice,other]));
- const malicious=pay(1);malicious[3].keys[2].pubkey=other.publicKey;fail(send(malicious,[alice,bob]));assert.equal(supply(),200n);
+ const malicious=pay(1);malicious[3].keys[2].pubkey=other.publicKey;fail(send(malicious,[alice]));assert.equal(supply(),200n);
 });
 test('120-second demonstration uses chain clock and resists rollback',()=>{
- const f=fixture(120);f.ok(f.send(f.pay(300),[f.alice,f.bob]));const clock=f.svm.getClock();clock.unixTimestamp+=120n;f.svm.setClock(clock);
- f.ok(f.send(f.pay(10),[f.alice,f.bob]));assert.equal(f.supply(),310n);clock.unixTimestamp-=120n;f.svm.setClock(clock);f.fail(f.send(f.pay(1),[f.alice,f.bob]));
+ const f=fixture(120);f.ok(f.send(f.pay(300),[f.alice]));const clock=f.svm.getClock();clock.unixTimestamp+=120n;f.svm.setClock(clock);
+ f.ok(f.send(f.pay(10),[f.alice]));assert.equal(f.supply(),310n);clock.unixTimestamp-=120n;f.svm.setClock(clock);f.fail(f.send(f.pay(1),[f.alice]));
 });
 test('prefunded participant PDA cannot block enrollment or reset existing usage',()=>{
  const f=fixture(),wallet=Keypair.generate(),person=addresses(f.program,f.config.publicKey,wallet.publicKey).person;
  f.svm.airdrop(wallet.publicKey.toBase58(),1_000_000_000n);f.ok(f.send([SystemProgram.transfer({fromPubkey:f.alice.publicKey,toPubkey:person,lamports:Number(f.svm.minimumBalanceForRentExemption(0n))})]));
  f.ok(f.send([enrollInstruction(f.program,f.config.publicKey,wallet.publicKey)],[wallet]));assert.equal(decodePerson(f.data(person)).spent,0n);
 });
-test('producer validates complete imported transaction and consumer signature before signing',()=>{
- const f=fixture();const partial=()=>{const tx=new Transaction({feePayer:f.alice.publicKey,recentBlockhash:f.svm.latestBlockhash()}).add(...f.pay(100));tx.partialSign(f.alice);return tx;};
- const pack=t=>envelope(t,f.program,f.config.publicKey);
- assert.equal(inspectPayment(pack(partial()),f.program,f.config.publicKey,f.bob.publicKey).value,100n);
- assert.throws(()=>inspectPayment(pack(partial()),f.program,f.config.publicKey,f.carol.publicKey));
- const extra=partial();extra.add(SystemProgram.transfer({fromPubkey:f.bob.publicKey,toPubkey:f.alice.publicKey,lamports:1}));extra.partialSign(f.alice);
- assert.throws(()=>inspectPayment(pack(extra),f.program,f.config.publicKey,f.bob.publicKey));
- const altered=partial();altered.instructions[3].data.writeBigUInt64LE(101n,1);
- const hostile=JSON.stringify({schema:'straw-devnet/2',program:String(f.program),config:String(f.config.publicKey),tx:altered.serialize({requireAllSignatures:false,verifySignatures:false}).toString('base64')});
- assert.throws(()=>inspectPayment(hostile,f.program,f.config.publicKey,f.bob.publicKey));
-});
-
-test('import rejects signer-approved changes to the canonical compute limit or fee',()=>{
- const f=fixture();
- for(const index of [0,1]){
-  const ix=f.pay(100);
-  if(index===0)ix[0].data.writeUInt32LE(1_400_000,1);else ix[1].data.writeBigUInt64LE(1_000_000n,1);
-  const tx=new Transaction({feePayer:f.alice.publicKey,recentBlockhash:f.svm.latestBlockhash()}).add(...ix);tx.partialSign(f.alice);
-  assert.throws(()=>inspectPayment(envelope(tx,f.program,f.config.publicKey),f.program,f.config.publicKey,f.bob.publicKey));
- }
-});
-
-test('signed return QR survives optical encode/decode and settles once with both signatures',async()=>{
- const {roundtrip}=await import('./qr-roundtrip.mjs');
- const {inspectReturnQR}=await import('../app/qr-protocol.mjs');
- const f=fixture();
- const tx=new Transaction({feePayer:f.alice.publicKey,recentBlockhash:f.svm.latestBlockhash()}).add(...f.pay(100));tx.partialSign(f.alice);
- const raw=envelope(tx,f.program,f.config.publicKey),decoded=roundtrip(raw);
- assert.equal(decoded,raw);assert(Buffer.byteLength(raw)<=2000);
- const parsed=inspectReturnQR(decoded,f.program,f.config.publicKey,f.bob.publicKey);
- assert.equal(f.supply(),0n);assert.equal(parsed.value,100n);
- assert.throws(()=>inspectReturnQR(decoded,f.program,f.config.publicKey,f.carol.publicKey));
- assert.throws(()=>inspectReturnQR(' '.repeat(2001),f.program,f.config.publicKey,f.bob.publicKey));
- parsed.tx.partialSign(f.bob);assert(parsed.tx.verifySignatures());
- const chainTx=getTransactionDecoder().decode(parsed.tx.serialize());
- f.ok(f.svm.sendTransaction(chainTx));assert.equal(f.state().spent,100n);assert.equal(f.balance(f.bob),100n);assert.equal(f.supply(),100n);
+test('consumer-only payment settles without recipient keys; exact replay and signature tampering fail',()=>{
+ const f=fixture();const tx=f.tx(f.pay(100),[f.alice]);
+ assert.equal(tx.signatures.length,1);assert(tx.signatures[0].publicKey.equals(f.alice.publicKey));
+ const chainTx=getTransactionDecoder().decode(tx.serialize());f.ok(f.svm.sendTransaction(chainTx));
+ assert.equal(f.balance(f.bob),100n);assert.equal(f.state().spent,100n);assert.equal(f.state().nonce,1n);
  f.fail(f.svm.sendTransaction(chainTx));assert.equal(f.supply(),100n);
+ const tampered=f.tx(f.pay(20),[f.alice]);tampered.instructions[3].data.writeBigUInt64LE(21n,1);
+ f.fail(f.svm.sendTransaction(getTransactionDecoder().decode(tampered.serialize({verifySignatures:false}))));
+ assert.equal(f.state().spent,100n);assert.equal(f.supply(),100n);
+});
+test('recipient choice cannot bypass a consumed nonce or the wallet-wide daily cap',()=>{
+ const f=fixture(),nonce=f.state().nonce;
+ f.ok(f.send(f.pay(200,nonce,f.day(),f.bob),[f.alice]));
+ f.fail(f.send(f.pay(50,nonce,f.day(),f.carol),[f.alice]));
+ f.ok(f.send(f.pay(100,f.state().nonce,f.day(),f.carol),[f.alice]));
+ f.fail(f.send(f.pay(1,f.state().nonce,f.day(),f.bob),[f.alice]));
+ assert.equal(f.state().spent,300n);assert.equal(f.balance(f.bob),200n);assert.equal(f.balance(f.carol),100n);
 });

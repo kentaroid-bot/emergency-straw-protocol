@@ -1,5 +1,7 @@
 # 公開Webと再ビルド
 
+2026-11-07更新：買う人だけの署名で支払いを直接送信する版。店側の受領署名・返送QRを削除し、「3. 着金を確認する」に変更。現在の検証は[DEVNET.md](DEVNET.md)と[一者署名版のPhantom実測](deployments/phantom-single-signer.json)を参照。下記の初回公開時の二者署名検証は履歴として残す。
+
 公開URL: https://straw-promise-devnet.kentaroid.chatgpt.site/
 
 静的なSitesホスティング。URLを知る人がChatGPTログインなしで閲覧できる。トランザクションはブラウザのPhantomで署名してSolana Devnetへ送る。サーバーの発行鍵・ウォレット鍵・データベース・RPCプロキシは持たない。

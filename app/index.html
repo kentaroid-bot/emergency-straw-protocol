@@ -1,7 +1,7 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>藁一本の約束 · Devnet</title><link rel="stylesheet" href="/devnet/style.css"><script defer src="/devnet/app.js"></script></head><body><main>
 <header><a href="/mock/">ウォレットなしで仕組みを見る</a><p class="eyebrow">SOLANA DEVNET · TEST TOKENS ONLY</p><h1>藁一本の約束</h1><p>使われない枠は消え、一度価値に置き換えられたお金だけが残る。</p></header>
-<section class="guide"><h2>はじめて試す方へ</h2><p>この体験では実際の商品やお金を使わず、食料を渡したつもりで操作します。まずは二人で、同じ「循環の速さ」を選んでください。</p><ol><li>PCの<a href="https://phantom.com/" target="_blank" rel="noopener noreferrer">Phantom拡張</a>を使い、テスト用アカウントとテストネットモードを選びます。スマートフォンはPhantomアプリ内ブラウザでこのURLを開いてください（モバイル実機は未検証）。</li><li><a href="https://faucet.solana.com/" target="_blank" rel="noopener noreferrer">公式Faucet</a>で自分のSolanaアドレスに無料のDevnet SOLを受け取ります。登録・支払いの手数料用です。SOLを購入する必要はありません。</li><li>双方がPhantomに接続し、支払う側が参加登録します。店側が「お会計QRを出す」で金額100のQRを作り、買う人が読み取ります。相手と金額を確認して「今日の300の枠から払う」で署名します。</li><li>買う人の返送QRを、店側が「3. 商品を渡して、対価を受け取る」で読み取り、内容を確認して署名します。支払側は「残高を更新」で残り200、受取側はクレジット100を確認できます。</li><li>「体験用・120秒」を二人とも選ぶと、次の枠が300に戻ってもクレジットが残る様子を短時間で試せます。通常版とは別の残高です。</li></ol><p class="small">一人で試す時は、二つのテスト用アカウントを別ブラウザや別端末で開きます。同じアドレスへの支払いはできません。支払データは期限内に受領してください。ページには秘密鍵や復元フレーズを入力しません。</p></section>
-<section><h2>今日を生きる、300の約束</h2><p>日次枠からの支払いは、一日の累計300まで。相手が受領に署名すると本トークンが発行されます。すでに持っている本トークンでも支払えます。こちらは日次枠を使わず、相手へ移動します。</p><label>循環の速さ<select id="instance"><option value="daily">一日・日本時間の午前0時更新</option><option value="demo">体験用・120秒を一日として更新</option></select></label><p id="deployment" role="status">配備情報を確認しています…</p><button id="connect">Phantomに接続</button> <button id="disconnect" disabled>切断</button><p id="wallet">未接続</p><p class="small">テスト用ウォレットを使い、Phantomの設定でテストネットモードを有効にしてください。</p></section>
+<section class="guide"><h2>はじめて試す方へ</h2><p>この体験では実際の商品やお金を使わず、食料を渡したつもりで操作します。まずは二人で、同じ「循環の速さ」を選んでください。</p><ol><li>PCの<a href="https://phantom.com/" target="_blank" rel="noopener noreferrer">Phantom拡張</a>を使い、テスト用アカウントとテストネットモードを選びます。スマートフォンはPhantomアプリ内ブラウザでこのURLを開いてください（モバイル実機は未検証）。</li><li><a href="https://faucet.solana.com/" target="_blank" rel="noopener noreferrer">公式Faucet</a>で自分のSolanaアドレスに無料のDevnet SOLを受け取ります。登録・支払いの手数料用です。SOLを購入する必要はありません。</li><li>双方がPhantomに接続し、支払う側が参加登録します。店側が「お会計QRを出す」で金額100のQRを作り、買う人が読み取ります。相手と金額を確認して「今日の300の枠から払う」を選び、「支払う」から署名します。</li><li>店側は「3. 着金を確認する」で残高を更新します。受領署名も返送QRも必要ありません。支払側は「残高を更新」で残り200、受取側はクレジット100を確認できます。</li><li>「体験用・120秒」を二人とも選ぶと、次の枠が300に戻ってもクレジットが残る様子を短時間で試せます。通常版とは別の残高です。</li></ol><p class="small">一人で試す時は、二つのテスト用アカウントを別ブラウザや別端末で開きます。同じアドレスへの支払いはできません。Phantomの署名画面では宛先と金額を確認してください。ページには秘密鍵や復元フレーズを入力しません。</p></section>
+<section><h2>今日を生きる、300の約束</h2><p>日次枠からの支払いは、一日の累計300まで。買う人の署名で取引が成立すると、相手に本トークンが発行されます。店側の署名は不要です。すでに持っている本トークンでも支払えます。こちらは日次枠を使わず、相手へ移動します。</p><label>循環の速さ<select id="instance"><option value="daily">一日・日本時間の午前0時更新</option><option value="demo">体験用・120秒を一日として更新</option></select></label><p id="deployment" role="status">配備情報を確認しています…</p><button id="connect">Phantomに接続</button> <button id="disconnect" disabled>切断</button><p id="wallet">未接続</p><p class="small">テスト用ウォレットを使い、Phantomの設定でテストネットモードを有効にしてください。</p></section>
 <section id="daily-limit"><h2>今は「ウォレットごとに1日300」です</h2>
 <p><strong>「一人につき1日300」は、まだ実現していません。</strong>同じ人が複数のウォレットを登録すると、それぞれで枠を使えます。同じ循環設定で3つ登録すれば、合計900の枠を使える状態になります。登録だけで本トークンが発行されるわけではありません。</p>
 <p>目指すのは、誰もが一人につき1日300を使える仕組みです。同じ人の重複登録を防ぎ、ウォレットを増やしたり交換したりしても枠が増えない仕組みは、今後の課題です。所得・資産・就労で利用者を選別するための確認ではありません。</p>
@@ -13,7 +13,7 @@
 <p><strong>今日の300の枠：</strong>利用日と累計使用額をチェーン上で管理し、チェーンの日時と合わせて残り枠を計算します。枠そのものは相手に送れません。</p>
 <div id="issuance-flow"><h3>日次枠で100を支払うと？</h3>
 <p><strong>日次枠を消費 → 相手に同額の本トークンを新規発行</strong></p>
-<ol><li>支払う人が、日次枠から100を支払うデータに署名します。この時点ではまだ枠は減りません。</li><li>受け取る人も受領に署名し、取引をブロックチェーンへ送信します。</li><li>取引が成立すると、支払う人の残り枠は<strong>300 → 200</strong>になり、相手に<strong>100の本トークンが新しく発行</strong>されます。</li></ol>
+<ol><li>支払う人が、日次枠から100を支払う取引にPhantomで署名します。</li><li>アプリがそのままブロックチェーンへ送信します。店側の署名・返送QRは不要です。</li><li>取引が成立すると、支払う人の残り枠は<strong>300 → 200</strong>になり、相手に<strong>100の本トークンが新しく発行</strong>されます。</li></ol>
 <p class="small">枠の消費と発行は、一つの取引で一緒に成立します。日次枠はまだトークンではないため、「バーン（トークンの焼却）」ではなく「枠の消費」です。</p></div>
 <p><strong>持っている本トークン（生産者クレジット）：</strong>残高はウォレットに紐づくチェーン上のトークン口座にあります。同じDevnet・同じトークンに対応した別のアプリやCLIからも、ウォレットの署名と手数料用のDevnet SOLで送れます。送信しても新規発行はなく、今日の枠も減りません。</p>
 <p class="small">このサイトが停止しても、それだけでチェーン上の残高は消えません。別のクライアントで日次枠を使う場合も、同じプロトコルのプログラムを呼び出し、同じ上限と署名条件に従います。</p>
@@ -24,7 +24,7 @@
 <label>店名・受取人の呼び名（任意）<input id="merchantLabel" maxlength="40" placeholder="例：となりの八百屋"></label>
 <label>受け取る金額<input id="requestAmount" type="number" min="1" step="1" value="100"></label>
 <button id="makeRequest" disabled>お会計QRを作る</button>
-<div id="requestCard" class="qr-card" hidden><p id="requestSummary"></p><img id="requestQr" alt="買う人が読み取るお会計QR"><p id="requestExpiry" role="status"></p><a id="saveRequestQr" download="wara-checkout.png">QR画像を保存</a><p class="small">QRを出しただけでは受領できません。日次枠払いなら下の「返送QRを読む」へ。WARA払いなら「残高を更新」で着金を確認してください。</p></div>
+<div id="requestCard" class="qr-card" hidden><p id="requestSummary"></p><img id="requestQr" alt="買う人が読み取るお会計QR"><p id="requestExpiry" role="status"></p><a id="saveRequestQr" download="wara-checkout.png">QR画像を保存</a><p class="small">QRを出しただけでは受領できません。支払い方法にかかわらず、買う人が署名・送信した後に「着金を確認する」で残高を更新してください。</p></div>
 <p class="small">お会計QRは10分間有効です。双方で同じ循環設定を選んでください。日次枠で払えるのは残り枠の範囲・最大300までです。表示名は自己申告で、本人確認済みの印ではありません。</p>
 </section>
 <section id="shopping"><h2>2. 買い物の支払い</h2>
@@ -36,25 +36,16 @@
 <label class="payment-option"><input type="radio" name="paymentMethod" id="payDaily" value="daily" checked><span><strong>今日の300の枠から払う</strong><small>今日の残り枠が減り、受取人に本トークンが新しく発行されます。</small></span></label>
 <label class="payment-option"><input type="radio" name="paymentMethod" id="payCredit" value="credit"><span><strong>持っている本トークンで払う</strong><small>自分の残高から相手へ移動。新規発行なし・今日の枠は減りません。</small></span></label>
 </fieldset>
-<p id="paymentExplanation" aria-live="polite">日次枠で100支払うと、今日の枠は300から200へ。相手が受領に署名すると、相手に100の本トークンが新しく発行されます。自分が持っている本トークンは減りません。</p>
+<p id="paymentExplanation" aria-live="polite">買う人の署名で100の支払いが成立すると、今日の枠は300から200へ、相手に100 WARAを新規発行。自分が持っているWARAは減りません。店側の署名は不要です。</p>
 <details><summary>支払先アドレスの詳細・手入力</summary><label>支払先のSolanaアドレス<input id="recipient" autocomplete="off" spellcheck="false"></label><p class="small">QRを読み取った場合は自動入力されます。手入力へ戻すには「QRの宛先を解除する」を押してください。</p></details><label>支払額<input id="amount" type="number" min="1" max="300" step="1" value="100"></label>
-<div id="dailyPayment"><p>QRから入った支払先と金額を確認し、下のボタンからPhantomで署名すると、支払データが自動生成されます。相手が受領するまで、枠は使われません。</p><button id="prepare" disabled>今日の枠で支払う・データに署名</button>
-<div id="returnCard" class="qr-card" hidden><h3>店側へ見せる返送QR</h3><img id="returnQr" alt="店側が読み取る署名済み支払データのQR"><p id="returnExpiry" role="status"></p><a id="saveReturnQr" download="wara-signed-payment.png">QR画像を保存</a><p class="small">店側の「返送QRを読む」で読み取り、内容を確認して受領に署名します。まだ支払いは確定していません。読み取りにくい場合は、画像で渡すか下のコピーを使ってください。</p></div>
-<details><summary>支払データの詳細・コピーで渡す</summary>
-<label>相手へ渡す支払データ（自動生成・入力不要）<textarea id="outgoing" readonly rows="4" aria-describedby="outgoing-help" placeholder="Phantomで署名すると、ここに支払データが自動表示されます"></textarea></label>
-<p id="outgoing-help" class="small">この欄は自分で入力しません。「コピー」を押して表示された内容をすべて取り、メッセージなどで相手へ渡してください。相手が「受け取った支払データ」欄にそのまま貼り付けます。</p>
-<button id="copy" disabled>コピー</button></details><p class="small">返送QRとコピーには同じ署名済みデータが入ります。有効時間は通常約1分ほどです。期限切れや日付変更の時は、支払う側で作り直します。お会計QRの10分とは別の期限です。</p></div>
-<div id="creditPayment" hidden><p>Phantomで署名すると、持っている本トークンを相手へ直接送信します。相手の受領署名や支払データのコピーは不要です。日次枠の参加登録なしでも、残高があれば支払えます。</p><button id="transfer" disabled>本トークンで支払う・送信に署名</button><p class="small">支払いには手数料用のDevnet SOLが必要です。相手は「残高を更新」で着金を確認できます。</p></div>
+<p>支払い方法を選び、下のボタンからPhantomで署名します。日次枠なら相手へ新規発行、WARAなら持っている残高から送信します。どちらも店側の署名や返送QRは不要です。</p>
+<button id="pay" disabled>支払う・Phantomで署名</button>
+<p class="small">手数料用のDevnet SOLが必要です。「確認済み」になるまで待ってください。送信結果が分からない時は、操作の記録のExplorerと残高を確認してから次の支払いへ進みます。</p>
 </section>
-<section id="receive-payment"><h2>3. 商品を渡して、対価を受け取る</h2><p><strong>日次枠からの支払いを受け取る場合：</strong>買う人がPhantomで署名した後の「返送QR」を読み取ります。読み取り後に「内容を確認」を押してください。</p><p class="small">持っているWARAで支払われた場合は返送QRも受領署名も不要です。「残高を更新」で着金を確認してください。</p>
-<button id="scanReturn" disabled>返送QRを読む（カメラ）</button>
-<label class="file-label">返送QR画像を選ぶ<input id="returnFile" type="file" accept="image/png,image/jpeg,image/webp" disabled></label><p id="returnImport" role="status"></p>
-<details><summary>支払データの詳細・貼り付けで受け取る</summary>
-<label>受け取った支払データ（相手から届いた内容を貼り付け）<textarea id="incoming" rows="4" maxlength="4000" aria-describedby="incoming-help" placeholder="相手がコピーして渡してくれた支払データを、全文そのまま貼り付けてください"></textarea></label>
-<p id="incoming-help" class="small">文章や数字を自分で作る欄ではありません。相手から届いた支払データを編集せず、すべて貼り付けます。ウォレットの秘密鍵や復元フレーズは入力しないでください。</p>
-</details>
-<p>読み取り・貼り付けの後は「内容を確認」で金額や宛先を確かめ、「商品を渡した・受領して発行」からPhantomで署名します。Devnetでは、商品を渡したつもりで試してください。</p>
-<button id="inspect" disabled>内容を確認</button><p id="review"></p><button id="accept" disabled>商品を渡した・受領して発行</button></section>
+<section id="receive-payment"><h2>3. 着金を確認する</h2>
+<p>店側は、買う人の支払い後にWARAの着金を確認します。<strong>日次枠払いでもWARA払いでも、受領署名や返送QRの操作はありません。</strong></p>
+<button id="refreshReceived" disabled>着金を確認する・残高を更新</button><p id="receivedBalance" role="status">Phantomに接続すると、チェーン上のWARA残高を確認できます。</p>
+<p class="small">現在残高とお会計前の残高を比べ、相手・金額を照合してください。この画面は請求ごとの入金を自動照合するものではありません。送信中や署名だけの状態を、支払い済みと扱わないでください。</p></section>
 <dialog id="qrScanner" aria-labelledby="scannerTitle"><h2 id="scannerTitle">QRを読み取る</h2><video id="qrVideo" autoplay muted playsinline></video><canvas id="qrCanvas" hidden></canvas><p id="scannerStatus" role="status"></p><p class="small">映像と選んだ画像は、この端末内で処理します。サーバーへ送信しません。このアプリ専用のQRです。</p><button id="stopScanner">閉じる・カメラを止める</button></dialog>
 <section aria-live="polite"><h2>操作の記録</h2><p id="status">接続して始めてください。</p><ol id="transactions"></ol></section>
 <footer><p>銀行や決済サーバーが停止した時の、小さな地場経済のための実験。ネットと電気、Solanaへの接続が必要です。ここで使うのは価値を持たないDevnetトークンです。</p><a href="https://github.com/kentaroid-bot/emergency-straw-protocol">MIT · ソースと設計</a></footer>

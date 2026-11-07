@@ -6,7 +6,7 @@ Core principle: money must serve minimum survival. Every person receives an unco
 
 Baseline scenario: electricity and internet remain available, but financial servers and intermediaries fail; local electronic-money/cash exchange and institution-dependent RWA onboarding are unavailable. Purpose: a small, temporary local economic order as a contingency. BLE/QR offline transport is an optional fallback for local connectivity interruptions.
 
-Status: v0.2, original offline simulation plus a locally tested native Solana Devnet program and Phantom app. Deployed on Devnet; the network daily cycle has passed. Phantom connection, enrollment, consumer signing, producer countersigning and transfers were verified in Brave. See DEVNET.md and deployments/devnet.json for current state.
+Status: v0.2, original offline simulation plus a locally tested native Solana Devnet program and Phantom app. Deployed on Devnet; the network daily cycle has passed. Phantom connection, enrollment, consumer signing, producer countersigning and transfers were verified in Brave on the historical two-signature version. The current version requires only the consumer signature. See DEVNET.md and deployments/devnet.json for current state.
 Daily cumulative spending is capped at 300 per wallet; only accepted payments mint enduring credit. Unused rights are never pre-minted. Unique-person enrollment is not implemented.
 License: MIT. Originator: kentaroid-bot. Dialogue: Gemini. Implementation: Codex.
 
@@ -19,10 +19,10 @@ License: MIT. Originator: kentaroid-bot. Dialogue: Gemini. Implementation: Codex
 
 - DEVNET.md: build, deployment, Phantom walkthrough, security and verification status.
 - program/src/lib.rs: native Rust state program; cargo build-sbf --locked.
-- app/: Vanilla Phantom app, shared encoding and strict transaction import validation.
+- app/: Vanilla Phantom app, shared encoding and checkout QR validation.
 - tests/: LiteSVM program tests and Devnet network guard; npm test after SBF build.
 - scripts/: browser build, dedicated-key Devnet deploy and network smoke test.
 
 Phantom integration and signed Solana transactions are implemented, and the public-network daily cycle is verified.
-Phantom signing has been verified separately using the daily instance. BLE/QR, long-term offline signing, paper redemption
+Phantom signing has been verified separately using the daily instance. Checkout QR is implemented; signed-return QR and merchant signing have been removed. BLE, long-term offline signing, paper redemption
 and inclusive unique-person enrollment remain future work. Use only Devnet test assets.

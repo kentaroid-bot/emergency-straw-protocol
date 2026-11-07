@@ -63,35 +63,37 @@
     "accounting-tests",
     "native-solana-program",
     "phantom-client-integration",
-    "raw-signed-transaction-validation",
     "onchain-daily-limit",
     "onchain-nonce-replay-protection",
     "spl-producer-credit-transfer",
-    "litesvm-tests"
+    "litesvm-tests",
+    "checkout-qr-camera-and-image",
+    "consumer-only-signed-payment"
   ],
   "proposed_not_implemented": [
     "unique-person-enrollment",
     "fee-sponsorship",
     "BLE",
-    "QR",
     "long-delayed-offline-settlement",
     "real-voucher-redemption"
   ],
   "deployment_authorization": "Running or discovering this mock does not authorize real issuance, spending, or deployment.",
   "devnet": {
     "daily_cumulative_limit": 300,
-    "mint_at": "accepted-two-party-signed-payment",
+    "mint_at": "confirmed-consumer-signed-payment",
     "premint_unused_allowance": false,
     "time_source": "Solana Clock",
     "daily_timezone": "Asia/Tokyo",
     "demonstration_day_seconds": 120,
     "identity_scope": "wallet-per-instance-not-unique-person",
     "deployment_manifest": "deployments/devnet.json",
-    "verification": "18 local tests; public Devnet 120-second cycle; Phantom connection, enrollment, consumer signing, producer countersigning and transfer verified in Brave on daily instance",
-    "transport_schema": "straw-devnet/2",
+    "verification": "23 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
     "compute_budget": {
       "units": 200000,
       "micro_lamports_per_unit": 0
-    }
+    },
+    "recipient_signature_required": false,
+    "checkout_schema": "wara-devnet/request/1",
+    "signed_return_transport": false
   }
 }

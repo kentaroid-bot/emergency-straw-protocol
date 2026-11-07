@@ -96,7 +96,7 @@ pub fn process_instruction(program: &Pubkey, accounts: &[AccountInfo], data: &[u
             create_pda(wallet,person,sys,program,PERSON_LEN,&[b"person",cfg.key.as_ref(),wallet.key.as_ref(),&[bump]])?;
             store(person,&Person {tag:2,config:*cfg.key,wallet:*wallet.key,day:day(&c)?,spent:0,nonce:0})
         },
-        // Both parties sign. State consumption and mint CPI either both commit or both revert.
+        // The consumer alone authorizes payment. Consumption and mint CPI are atomic.
         2 => {
             require(rest.len()==24,5)?;
             let amount=u64::from_le_bytes(rest[0..8].try_into().unwrap());
@@ -106,7 +106,7 @@ pub fn process_instruction(program: &Pubkey, accounts: &[AccountInfo], data: &[u
             let cfg=next_account_info(&mut it)?; let person=next_account_info(&mut it)?;
             let mint=next_account_info(&mut it)?; let destination=next_account_info(&mut it)?;
             let authority=next_account_info(&mut it)?; let token=next_account_info(&mut it)?;
-            signer(consumer)?; signer(producer)?;
+            signer(consumer)?;
             require(consumer.key != producer.key,6)?;
             let c=config(cfg,program)?;
             let now=day(&c)?;

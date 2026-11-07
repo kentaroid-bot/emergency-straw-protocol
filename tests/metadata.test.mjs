@@ -22,7 +22,7 @@ test('metadata CPI preserves credit and limits; creator, PDA and program checks 
  const {mint,person}=addresses(program,config.publicKey,creator.publicKey);
  const day=currentDay(svm.getClock().unixTimestamp,decodeConfig(data(config.publicKey)));
  const pay=(n,nonce)=>paymentInstructions(program,config.publicKey,creator.publicKey,receiver.publicKey,n,day,nonce);
- ok(send(pay(90,0n),[creator,receiver]));
+ ok(send(pay(90,0n),[creator]));
  const mintBefore=data(mint),personBefore=data(person),configBefore=data(config.publicKey);
  const settings={name:'WARA Devnet',symbol:'WARA',uri:'https://example.org/wara.json'};
  const ix=()=>createMetadataInstruction(program,config.publicKey,creator.publicKey,settings);
@@ -40,7 +40,7 @@ test('metadata CPI preserves credit and limits; creator, PDA and program checks 
  assert.equal(m.name,settings.name);assert.equal(m.symbol,settings.symbol);assert.equal(m.uri,settings.uri);
  assert.equal(m.tokenStandard,2);assert.equal(m.sellerFeeBasisPoints,0);assert.equal(m.isMutable,1);
  fail(send([ix()])); // An existing metadata account cannot be replaced through this instruction.
- ok(send(pay(210,1n),[creator,receiver]));fail(send(pay(1,2n),[creator,receiver]));
+ ok(send(pay(210,1n),[creator]));fail(send(pay(1,2n),[creator]));
  assert.equal(decodePerson(data(person)).spent,300n);assert.equal(data(mint).readBigUInt64LE(36),300n);
 });
 
