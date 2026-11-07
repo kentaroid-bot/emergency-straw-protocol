@@ -26,10 +26,17 @@
 </fieldset>
 <p id="paymentExplanation" aria-live="polite">日次枠で100支払うと、今日の枠は300から200へ。相手が受領に署名すると、相手に100の本トークンが新しく発行されます。自分が持っている本トークンは減りません。</p>
 <label>支払先のSolanaアドレス<input id="recipient" autocomplete="off" spellcheck="false"></label><label>支払額<input id="amount" type="number" min="1" max="300" step="1" value="100"></label>
-<div id="dailyPayment"><p>Phantomで署名したデータを相手へ渡します。相手が受領するまで、枠は使われません。</p><button id="prepare" disabled>今日の枠で支払う・データに署名</button><label>相手へ渡す支払データ<textarea id="outgoing" readonly rows="4"></textarea></label><button id="copy" disabled>コピー</button><p class="small">支払データを相手へ渡してください。有効時間は通常約1分ほどです。期限切れや日付変更の時は作り直します。QR/BLEは今後の受け渡し手段で、この版はコピーで渡します。</p></div>
+<div id="dailyPayment"><p>支払先のSolanaアドレスと金額を入力し、下のボタンからPhantomで署名すると、支払データが自動生成されます。相手が受領するまで、枠は使われません。</p><button id="prepare" disabled>今日の枠で支払う・データに署名</button>
+<label>相手へ渡す支払データ（自動生成・入力不要）<textarea id="outgoing" readonly rows="4" aria-describedby="outgoing-help" placeholder="Phantomで署名すると、ここに支払データが自動表示されます"></textarea></label>
+<p id="outgoing-help" class="small">この欄は自分で入力しません。「コピー」を押して表示された内容をすべて取り、メッセージなどで相手へ渡してください。相手が「受け取った支払データ」欄にそのまま貼り付けます。</p>
+<button id="copy" disabled>コピー</button><p class="small">データには支払いの内容と署名が含まれます。有効時間は通常約1分ほどです。期限切れや日付変更の時は、支払う側で作り直します。QR/BLEは今後の受け渡し手段で、この版はコピーで渡します。</p></div>
 <div id="creditPayment" hidden><p>Phantomで署名すると、持っている本トークンを相手へ直接送信します。相手の受領署名や支払データのコピーは不要です。日次枠の参加登録なしでも、残高があれば支払えます。</p><button id="transfer" disabled>本トークンで支払う・送信に署名</button><p class="small">支払いには手数料用のDevnet SOLが必要です。相手は「残高を更新」で着金を確認できます。</p></div>
 </section>
-<section><h2>3. 商品を渡して、対価を受け取る</h2><p><strong>日次枠からの支払いを受け取る場合：</strong>受取人のPhantomで支払データを確認します。商品を渡したら署名し、Devnetに送信します。</p><p class="small">本トークンで支払われた場合は、この受領操作は不要です。「残高を更新」で本トークンの着金を確認してください。</p><label>受け取った支払データ<textarea id="incoming" rows="4" maxlength="4000"></textarea></label><button id="inspect" disabled>内容を確認</button><p id="review"></p><button id="accept" disabled>商品を渡した・受領して発行</button></section>
+<section id="receive-payment"><h2>3. 商品を渡して、対価を受け取る</h2><p><strong>日次枠からの支払いを受け取る場合：</strong>支払う側がPhantomで署名し、自動生成された支払データをコピーして渡してくれます。その内容を下の欄へ貼り付けてください。</p><p class="small">本トークンで支払われた場合は、この受領操作は不要です。「残高を更新」で本トークンの着金を確認してください。</p>
+<label>受け取った支払データ（相手から届いた内容を貼り付け）<textarea id="incoming" rows="4" maxlength="4000" aria-describedby="incoming-help" placeholder="相手がコピーして渡してくれた支払データを、全文そのまま貼り付けてください"></textarea></label>
+<p id="incoming-help" class="small">文章や数字を自分で作る欄ではありません。相手から届いた支払データを編集せず、すべて貼り付けます。ウォレットの秘密鍵や復元フレーズは入力しないでください。</p>
+<p>貼り付けたら「内容を確認」で金額や宛先を確かめ、「商品を渡した・受領して発行」からPhantomで署名します。Devnetでは、商品を渡したつもりで試してください。</p>
+<button id="inspect" disabled>内容を確認</button><p id="review"></p><button id="accept" disabled>商品を渡した・受領して発行</button></section>
 <section aria-live="polite"><h2>操作の記録</h2><p id="status">接続して始めてください。</p><ol id="transactions"></ol></section>
 <footer><p>銀行や決済サーバーが停止した時の、小さな地場経済のための実験。ネットと電気、Solanaへの接続が必要です。ここで使うのは価値を持たないDevnetトークンです。</p><a href="https://github.com/kentaroid-bot/emergency-straw-protocol">MIT · ソースと設計</a></footer>
 </main></body></html>
