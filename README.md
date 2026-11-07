@@ -16,6 +16,26 @@ The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens min
 
 ![The next morning: consumer allocation is renewed, producer credit remains](docs/mock.jpg)
 
+## 紹介文：体験してみませんか？
+
+🌾 **藁一本の約束 — 体験してみませんか？**
+
+金融システムが止まった時にも、地域で食料や物資を交換できるようにする、小さな経済の実験です。
+
+毎日、購入に使える300の枠が更新されます。使わなかった枠は繰り越せませんが、取引が成立した分は、提供した人の「消えないトークン」になります。そのトークンも次の買い物に使え、その場合は新しく発行されず、相手へ移動します。
+
+**試し方**
+
+1. PCのPhantomでテスト用アカウントを用意し、テストネットモードを有効にする。
+2. 画面内の公式Faucetから無料のDevnet SOLを受け取る。
+3. 二人で同じ循環設定を選び、画面の案内に沿って支払い・受領を試す。
+
+「120秒を一日」にすると、日次枠が更新されてもトークンが残る様子を短時間で体験できます。実際のお金や商品は使いません。ウォレットなしで見られる説明用モックもあります。
+
+👉 [体験アプリを開く](https://straw-promise-devnet.kentaroid.chatgpt.site/)
+
+触ってみて、分かりにくかったところを教えてもらえるとうれしいです。
+
 ## The idea
 
 The originator's principle is that money must serve the minimum conditions of living. Every person receives the means to obtain that day's food, without an income or asset test, a work requirement, or proof of hardship. This is a universal rule of issuance rather than a discretionary welfare award. Unspent daily money disappears; money exchanged for actual food or other essentials remains as the provider's compensation.
