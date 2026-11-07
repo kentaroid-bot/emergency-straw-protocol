@@ -36,6 +36,21 @@ The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens min
 
 触ってみて、分かりにくかったところを教えてもらえるとうれしいです。
 
+## 残高の記録先と、このWebアプリ以外からの利用
+
+**日次の300の枠も、本トークンの残高も、Solana Devnet上で管理しています。** このWebアプリはチェーンの記録を読み取り、Phantomで署名した取引を送信する窓口です。サイト内だけの台帳や、サイトが預かる残高ではありません。ここでいう「生産者クレジット」は、受領済みの消えない本トークンを指します。
+
+| 種類 | チェーン上の記録 | このWebアプリ以外からの利用 |
+|---|---|---|
+| 今日の300の枠 | プロトコルの参加者アカウントに利用日・累計使用額を記録。チェーンの日時と合わせて残り枠を算出 | 枠そのものは送金できない。同じプログラムと循環設定を使う別クライアントから、同じ上限・双方の署名条件に従って支払える |
+| 本トークン（生産者クレジット） | ウォレットに紐づくSPLトークン口座に残高を記録 | 同じDevnet・同じMintに対応した別アプリやCLIから送れる。所有者の署名と手数料用Devnet SOLが必要 |
+
+日次枠の支払データを作って相手へ渡した段階では、まだ未決済です。相手も署名し、取引がチェーン上で成立すると、枠の消費と本トークンの発行が一緒に記録されます。本トークンを使った支払いでは、既存トークンが相手へ移動するだけで、新規発行も日次枠の消費もありません。
+
+このサイトが停止しても、それだけでチェーン上の残高は消えません。別のアプリではトークンが自動表示されないことがあるため、[Devnet配備情報](deployments/devnet.json)のMintを確認してください。通常版と120秒体験版は別のMintです。
+
+この説明はDevnet版についてです。`index.html`を直接開く元の説明用モックは、ブラウザ内だけのシミュレーションです。
+
 ## The idea
 
 The originator's principle is that money must serve the minimum conditions of living. Every person receives the means to obtain that day's food, without an income or asset test, a work requirement, or proof of hardship. This is a universal rule of issuance rather than a discretionary welfare award. Unspent daily money disappears; money exchanged for actual food or other essentials remains as the provider's compensation.
