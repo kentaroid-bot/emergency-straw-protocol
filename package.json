@@ -1,8 +1,8 @@
 {
   "name": "emergency-straw-protocol",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Daily 300 spending rights, minted on exchange: offline concept and Solana Devnet prototype.",
+  "description": "10 daily Kusa across communities, origin-preserving Devnet settlement and 90:10 WARA issuance.",
   "license": "MIT",
   "scripts": {
     "start": "node serve.js",

@@ -10,8 +10,9 @@ use solana_program::{
 };
 use spl_token::state::{Account as TokenAccount, Mint};
 
+mod v3;
 entrypoint!(process_instruction);
-pub const LIMIT: u64 = 300;
+const LEGACY_LIMIT: u64 = 300;
 pub const CONFIG_LEN: usize = 81; // tag + creator + mint + period + offset
 pub const PERSON_LEN: usize = 89; // tag + config + wallet + day + spent + nonce
 
@@ -111,7 +112,7 @@ pub fn process_instruction(program: &Pubkey, accounts: &[AccountInfo], data: &[u
             let c=config(cfg,program)?;
             let now=day(&c)?;
             require(expected_day==now,1)?;
-            require(amount>0 && amount<=LIMIT,4)?;
+            require(amount>0 && amount<=LEGACY_LIMIT,4)?;
             require(*token.key==spl_token::id() && mint.owner==token.key && destination.owner==token.key,5)?;
             require(*mint.key==c.mint,5)?;
             let (a,bump)=Pubkey::find_program_address(&[b"authority",cfg.key.as_ref()],program);
@@ -128,7 +129,7 @@ pub fn process_instruction(program: &Pubkey, accounts: &[AccountInfo], data: &[u
             require(now>=state.day,7)?;
             if now>state.day {state.day=now;state.spent=0;}
             state.spent=state.spent.checked_add(amount).ok_or(err(2))?;
-            require(state.spent<=LIMIT,2)?;
+            require(state.spent<=LEGACY_LIMIT,2)?;
             state.nonce=state.nonce.checked_add(1).ok_or(err(3))?;
             store(person,&state)?;
             invoke_signed(&spl_token::instruction::mint_to_checked(token.key,mint.key,destination.key,authority.key,&[],amount,0)?,
@@ -167,6 +168,7 @@ pub fn process_instruction(program: &Pubkey, accounts: &[AccountInfo], data: &[u
                 .token_standard(mpl_token_metadata::types::TokenStandard::Fungible).decimals(0)
                 .invoke_signed(&[&[b"authority",cfg.key.as_ref(),&[bump]]])
         },
+        10..=15 => v3::process(program,accounts,op,rest),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }

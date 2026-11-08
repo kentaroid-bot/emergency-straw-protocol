@@ -1,28 +1,4 @@
-# 藁一本の約束 — Emergency Straw Protocol
+# 藁一本の約束 v0.3
 
-> A forkable concept seed for emergency food exchange: daily consumer allocation expires; accepted exchange crystallizes into non-expiring producer credit.
-
-Core principle: money must serve minimum survival. Every person receives an unconditional daily allocation for food, including providers and holders of crystallized credit. No income/asset test, work requirement or proof of hardship. Unspent daily allocation expires; actual exchange preserves the provider's compensation. Universal distribution and inclusive, duplicate-resistant enrollment remain to be implemented; the mock demonstrates one consumer's state transitions.
-
-Baseline scenario: electricity and internet remain available, but financial servers and intermediaries fail; local electronic-money/cash exchange and institution-dependent RWA onboarding are unavailable. Purpose: a small, temporary local economic order as a contingency. BLE/QR offline transport is an optional fallback for local connectivity interruptions.
-
-Status: v0.2, original offline simulation plus a locally tested native Solana Devnet program and Phantom app. Deployed on Devnet; the network daily cycle has passed. Phantom connection, enrollment, consumer signing, producer countersigning and transfers were verified in Brave on the historical two-signature version. The current version requires only the consumer signature. See DEVNET.md and deployments/devnet.json for current state.
-Daily cumulative spending is capped at 300 per wallet; only accepted payments mint enduring credit. Unused rights are never pre-minted. Unique-person enrollment is not implemented.
-License: MIT. Originator: kentaroid-bot. Dialogue: Gemini. Implementation: Codex.
-
-- README.md: English overview, running instructions, architecture, trade-offs.
-- DESIGN.md: Japanese intent, dialogue attribution, model and next experiments.
-- protocol.json: machine-readable scope and state transitions.
-- index.html: Japanese interactive demo; open locally with model.js beside it.
-- model.js: dependency-free in-memory model.
-- model.test.js: node --test model.test.js.
-
-- DEVNET.md: build, deployment, Phantom walkthrough, security and verification status.
-- program/src/lib.rs: native Rust state program; cargo build-sbf --locked.
-- app/: Vanilla Phantom app, shared encoding and checkout QR validation.
-- tests/: LiteSVM program tests and Devnet network guard; npm test after SBF build.
-- scripts/: browser build, dedicated-key Devnet deploy and network smoke test.
-
-Phantom integration and signed Solana transactions are implemented, and the public-network daily cycle is verified.
-Phantom signing has been verified separately using the daily instance. Checkout QR v2 has a unique public reference; active merchant screens poll confirmed Devnet transactions and verify the payment instruction and exact recipient token increase before showing receipt. Legacy/manual payments do not auto-match; polling is in-memory and stops after expiry grace or context changes. Checkout QR is implemented; signed-return QR and merchant signing have been removed. BLE, long-term offline signing, paper redemption
-and inclusive unique-person enrollment remain future work. Use only Devnet test assets.
+Main app: https://straw-promise-devnet.kentaroid.chatgpt.site/
+README.md and protocol.json describe the current model. One wallet has 10 Kusa per JST day across communities. Each Kusa mints 90 WARA to the shop and 10 to the buyer. Issuer-specific mints persist. SMS is simulated; signed settlement is on Solana Devnet. /devnet/ and LEGACY-v02.md document the older independent 300-limit system.

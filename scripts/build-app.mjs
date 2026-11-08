@@ -4,13 +4,13 @@ import {mkdir,copyFile,rm,readFile,writeFile} from 'node:fs/promises';
 await rm('dist',{recursive:true,force:true});
 await mkdir('dist/devnet',{recursive:true});
 await mkdir('dist/mock',{recursive:true});
-await mkdir('dist/card-demo',{recursive:true});
-await build({entryPoints:['card-demo/main.mjs'],bundle:true,outfile:'dist/card-demo/app.js',platform:'browser',target:['es2022'],sourcemap:false,minify:true});
-await copyFile('card-demo/style.css','dist/card-demo/style.css');
-for(const route of ['user','shop','support','account','communities']){await mkdir(`dist/${route}`,{recursive:true});await copyFile('card-demo/index.html',`dist/${route}/index.html`);}
+await mkdir('dist/v3',{recursive:true});
+await build({entryPoints:['mainstream/main.mjs'],bundle:true,outfile:'dist/v3/main.js',platform:'browser',target:['es2022'],define:{global:'globalThis'},minify:true});
+await copyFile('mainstream/style.css','dist/v3/style.css');
+for(const route of ['','user','signup','shop','support','account','communities','communities/new']){await mkdir(`dist/${route}`,{recursive:true});await copyFile('mainstream/index.html',`dist/${route}/index.html`);}
 await build({entryPoints:['app/main.mjs'],bundle:true,outfile:'dist/app.js',platform:'browser',target:['es2022'],define:{global:'globalThis'},sourcemap:false,minify:true});
 for(const [source,destination] of [
- ['app/index.html','dist/index.html'],['app/index.html','dist/devnet/index.html'],
+ ['app/index.html','dist/devnet/index.html'],
  ['app/style.css','dist/devnet/style.css'],['dist/app.js','dist/devnet/app.js'],
  ['deployments/devnet.json','dist/devnet/deployment.json'],
  ['model.js','dist/mock/model.js'],

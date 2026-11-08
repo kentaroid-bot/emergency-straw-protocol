@@ -1,21 +1,59 @@
-// Local-only static server. Explicit public-file allowlist; never serves keys or sources.
-const http = require('node:http');
-const fs = require('node:fs');
-const path = require('node:path');
-const files = {'/mock/':'index.html','/mock/model.js':'model.js','/mock/app/index.html':'app/index.html','/mock/README.md':'README.md','/mock/DESIGN.md':'DESIGN.md','/app/index.html':'app/index.html','/devnet':'app/index.html','/devnet/':'app/index.html','/devnet/style.css':'app/style.css',
-  '/devnet/app.js':'dist/app.js','/devnet/deployment.json':'deployments/devnet.json','/':'index.html','/index.html':'index.html','/model.js':'model.js',
-  '/README.md':'README.md','/DEVNET.md':'DEVNET.md','/DESIGN.md':'DESIGN.md','/llms.txt':'llms.txt','/protocol.json':'protocol.json'};
-for(const role of ['user','shop','support']){files[`/${role}`]='card-demo/index.html';files[`/${role}/`]='card-demo/index.html';}
-files['/card-demo/app.js']='dist/card-demo/app.js';files['/card-demo/style.css']='card-demo/style.css';
-const port = Number(process.env.PORT || 8787);
-http.createServer((req,res)=>{
-  if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}
-  const file=files[req.url.split('?')[0]];
-  if(!file){res.writeHead(404);return res.end('Not found');}
-  const type=file.endsWith('.html')?'text/html':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript':file.endsWith('.json')?'application/json':'text/plain';
-  fs.readFile(path.join(__dirname,file),(err,data)=>{
-    if(err){res.writeHead(500);return res.end('Unable to read demo file');}
-    res.writeHead(200,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
-    res.end(req.method==='HEAD'?undefined:data);
-  });
-}).listen(port,'127.0.0.1',()=>console.log(`Straw concept mock: http://127.0.0.1:${port}`));
+// Serve only the published build; no keys, project sources or directory listings.
+const http = require("node:http"),
+  fs = require("node:fs"),
+  path = require("node:path");
+const base = path.join(__dirname, "dist");
+const routes = new Set([
+  "",
+  "user",
+  "signup",
+  "shop",
+  "account",
+  "support",
+  "communities",
+  "communities/new",
+  "mock",
+  "devnet",
+]);
+const assets = new Set([
+  "v3/main.js",
+  "v3/style.css",
+  "devnet/app.js",
+  "devnet/style.css",
+  "devnet/deployment.json",
+  "mock/model.js",
+  "LICENSE",
+  "app.js",
+]);
+http
+  .createServer((req, res) => {
+    const name = req.url.split("?")[0].replace(/^\/|\/$/g, "");
+    const file = routes.has(name)
+      ? path.join(name, "index.html")
+      : assets.has(name)
+        ? name
+        : null;
+    if (!file || !["GET", "HEAD"].includes(req.method)) {
+      res.writeHead(404);
+      return res.end();
+    }
+    fs.readFile(path.join(base, file), (err, buf) => {
+      if (err) {
+        res.writeHead(404);
+        return res.end();
+      }
+      res.writeHead(200, {
+        "Content-Type":
+          {
+            html: "text/html",
+            css: "text/css",
+            js: "text/javascript",
+            json: "application/json",
+          }[file.split(".").pop()] || "text/plain",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      res.end(req.method === "HEAD" ? undefined : buf);
+    });
+  })
+  .listen(Number(process.env.PORT || 8787), "127.0.0.1");

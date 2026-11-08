@@ -1,6 +1,8 @@
 # 公開Webと再ビルド
 
-2026-11-08更新：お会計QR v2のreferenceによる入金自動確認を追加。confirmed取引の宛先・金額・実増加額を照合して受取完了を表示。既存ProgramとMintは変更なし。
+v0.3: トップは登録・財布。/shop/、/support/、/account/、/communities/new/ は同じ公開アプリです。配信パッケージは dist/ のみ。オンチェーンの検証にはビルド前に cargo build-sbf -- --locked と npm test を実行します。
+
+旧版の記録：お会計QR v2のreferenceによる入金自動確認を追加。confirmed取引の宛先・金額・実増加額を照合して受取完了を表示。既存ProgramとMintは変更なし。
 
 2026-11-07更新：買う人だけの署名で支払いを直接送信する版。店側の受領署名・返送QRを削除し、「3. 着金を確認する」に変更。現在の検証は[DEVNET.md](DEVNET.md)と[一者署名版のPhantom実測](deployments/phantom-single-signer.json)を参照。下記の初回公開時の二者署名検証は履歴として残す。
 
@@ -16,7 +18,7 @@ npm run build
 # dist/ だけをHTTPS静的ホストのルートへ配備する
 ```
 
-Node.js 24以降を使う。トップはDevnetアプリ、`/devnet/`も同じアプリ、`/mock/`は元のウォレット不要モック。ルートからの絶対パスを使うため、サブディレクトリ配備ではパス調整が必要。ローカルでは従来通り `npm start` の `/devnet/` で試せる。
+Node.js 24以降を使う。トップはv0.3の財布、`/devnet/`は旧300枠の検証版、`/mock/`は元のウォレット不要モック。ルートからの絶対パスを使うため、サブディレクトリ配備ではパス調整が必要。ローカルでは従来通り `npm start` の `/devnet/` で試せる。
 
 ビルドはdistを作り直し、明示されたHTML・JS・CSS・公開Devnet設定・MIT LICENSEだけを入れる。**リポジトリ全体やprivateディレクトリをホストへアップロードしない。** 元対話、秘密鍵、内部資料は出力に含めない。
 
