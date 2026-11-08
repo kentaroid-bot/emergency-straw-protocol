@@ -5,6 +5,8 @@ const path = require('node:path');
 const files = {'/mock/':'index.html','/mock/model.js':'model.js','/mock/app/index.html':'app/index.html','/mock/README.md':'README.md','/mock/DESIGN.md':'DESIGN.md','/app/index.html':'app/index.html','/devnet':'app/index.html','/devnet/':'app/index.html','/devnet/style.css':'app/style.css',
   '/devnet/app.js':'dist/app.js','/devnet/deployment.json':'deployments/devnet.json','/':'index.html','/index.html':'index.html','/model.js':'model.js',
   '/README.md':'README.md','/DEVNET.md':'DEVNET.md','/DESIGN.md':'DESIGN.md','/llms.txt':'llms.txt','/protocol.json':'protocol.json'};
+for(const role of ['user','shop','support']){files[`/${role}`]='card-demo/index.html';files[`/${role}/`]='card-demo/index.html';}
+files['/card-demo/app.js']='dist/card-demo/app.js';files['/card-demo/style.css']='card-demo/style.css';
 const port = Number(process.env.PORT || 8787);
 http.createServer((req,res)=>{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}

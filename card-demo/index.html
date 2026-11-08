@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>藁一本の約束 · カード体験</title>
+    <link rel="stylesheet" href="/card-demo/style.css" />
+    <script defer src="/card-demo/app.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <a class="brand" href="/user"
+          ><span class="mark" aria-hidden="true">🌾</span
+          ><span>藁一本の約束<small>Kusa & WARA</small></span></a
+        >
+        <p class="nav-title">視点を切り替える</p>
+        <nav aria-label="役割">
+          <a href="/user" data-route="user"><span>使う人</span></a
+          ><a href="/shop" data-route="shop"><span>お店</span></a
+          ><a href="/support" data-route="support"><span>地域の窓口</span></a>
+        </nav>
+        <div class="aside-note"><a href="/devnet/">Devnetアプリへ ↗</a></div>
+      </aside>
+      <main>
+        <div class="demo-banner">
+          <strong>画面モック</strong
+          ><span
+            >架空の会計です。実際の認証・送金・カメラ読取は行いません。</span
+          >
+        </div>
+        <header class="page-head">
+          <div>
+            <h1 id="title"></h1>
+            <p id="subtitle" class="muted"></p>
+          </div>
+          <span id="demoDay" class="day-chip"></span>
+        </header>
+        <p id="feedback" role="status" class="feedback" hidden></p>
+        <div id="content"></div>
+        <footer>
+          <details>
+            <summary>この体験について・最初からやり直す</summary>
+            <p>
+              同じブラウザのこのサイト内だけで状態を保存します。別端末とは共有しません。暗証番号は公開のデモ値
+              <b>123456</b>
+              です。本物の暗証番号や個人情報を入力しないでください。地域確認も操作の見本で、実際の本人確認や権限管理ではありません。
+            </p>
+            <button id="nextDay" class="secondary">翌日を試す</button
+            ><button id="resetDemo" class="secondary">体験を最初から</button>
+          </details>
+          <p>
+            MIT ·
+            <a href="https://github.com/kentaroid-bot/emergency-straw-protocol"
+              >ソースと構想</a
+            >
+          </p>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
