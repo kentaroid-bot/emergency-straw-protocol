@@ -4,6 +4,7 @@ import {TOKEN_PROGRAM_ID,getAssociatedTokenAddressSync,createAssociatedTokenAcco
 import {pk,assertDevnet,readInstance,readPerson,readClock,currentDay,remaining,amount,budgetInstructions,enrollInstruction,paymentInstructions} from './protocol.mjs';
 import {createRequest,parseRequest} from './qr-protocol.mjs';
 import {withReference,receiptLookup} from './receipt.mjs';
+import {historyReader,historySummary} from './receipt-history.mjs';
 import {qrImage,createScanner} from './qr-media.mjs';
 globalThis.Buffer=Buffer;
 const $=id=>document.getElementById(id),RPC='https://api.devnet.solana.com';
@@ -11,6 +12,7 @@ const connection=new Connection(RPC,'confirmed');
 let manifest,program,config,instance,provider,wallet,person,credit=0n,chainTime=0n,clockReadAt=0,busy=false,generation=0;
 let checkoutRequest=null,merchantRequest=null,scanning=false,scanGeneration=0;
 let receiptWatch=null;
+let merchantHistory=null,historyBusy=false,historyEpoch=0,historyLastAttempt=0,historyAgain=false,historyCache=new Map();
 const write=(id,text)=>{$(id).textContent=text;};
 function notice(text,error=false){write('status',text);$('status').classList.toggle('error',error);}
 function usingDaily(){return $('payDaily').checked;}
@@ -21,6 +23,7 @@ function controls(){const blocked=busy||scanning,ready=Boolean(wallet&&instance)
  for(const id of ['nextCheckout','nextCheckoutSummary']){const button=$(id);button.hidden=!receiptWatch?.done;button.disabled=!ready||!receiptWatch?.done;}
  for(const id of ['scanRequest','requestFile'])$(id).disabled=blocked||!instance;
  for(const id of ['merchantLabel','requestAmount','recipient','amount','confirmCheckout','clearCheckout'])$(id).disabled=blocked;
+ $('refreshHistory').disabled=!wallet||!instance||historyBusy;$('moreHistory').disabled=!wallet||!instance||historyBusy||!merchantHistory||merchantHistory.snapshot().done;
  $('pay').disabled=!ready||!confirmed||(usingDaily()?!person:credit===0n);for(const id of ['payDaily','payCredit'])$(id).disabled=blocked;$('enroll').disabled=!ready||Boolean(person);$('connect').disabled=blocked||Boolean(wallet);$('disconnect').disabled=blocked||!wallet;$('instance').disabled=blocked;}
 async function task(fn){if(busy)return;busy=true;controls();try{await fn();}catch(e){notice(e.message||String(e),true);}finally{busy=false;controls();}}
 function snapshot(){if(!wallet||!instance)throw Error('Phantomと配備済みの循環設定を接続してください。');return {wallet,config,program,generation};}
@@ -34,7 +37,7 @@ async function refresh(){
  write('remaining',person?String(remaining(person,currentDay(t,instance))):'未登録');write('credit',String(credit));
  write('receivedBalance',`現在のWARA残高：${credit}（${instance.period===120n?'120秒体験版':'一日循環'}）。お会計QRへの入金は自動確認の表示をご覧ください。`);
  write('enrollment',person?'参加済み。登録し直しても、その日の枠は増えません。':'参加登録すると日次枠を使えます。');
- controls();tick();
+ controls();tick();if(Date.now()-historyLastAttempt>60000)updateHistory();
 }
 function tick(){if(!instance||!clockReadAt)return;const elapsed=Math.floor((Date.now()-clockReadAt)/1000);if(elapsed>30){write('countdown','更新待ち');write('clocknote','時計が古くなりました。「残高を更新」で再取得');return;}
  const t=chainTime+BigInt(elapsed),seconds=instance.period-(t+instance.offset)%instance.period;write('countdown',`${String(seconds/3600n).padStart(2,'0')}:${String(seconds/60n%60n).padStart(2,'0')}:${String(seconds%60n).padStart(2,'0')}`);write('clocknote',instance.period===120n?'体験用：120秒を一日とします':'日本時間の午前0時更新・表示は推定');
@@ -114,6 +117,7 @@ async function pollReceipt(w,manual=false){
    $('requestCard').hidden=true;removeQr();logSignature(result.signature).append(' · 入金確認済み');
    // Preserve success even when a separate balance refresh fails.
    try{await refresh();}catch{}
+   if(receiptWatch===w)updateHistory(true);
   }else receiptMessage(Date.now()<w.request.expiresAt?`${w.request.amount} WARAの入金を待っています…`:Date.now()<w.request.expiresAt+120_000?'QRの期限が切れました。送信済みの支払いを引き続き確認しています。':'このお会計への入金はまだ確認できません。自動確認は終了しています。Explorerでも確認してください。');
  }catch{if(receiptWatch===w)receiptMessage('通信または照合の確認待ちです。受取完了ではありません。接続回復後に再確認します。','uncertain');}
  finally{
@@ -129,7 +133,43 @@ function startReceipt(request,minSlot){
  receiptMessage(`${request.amount} WARAの入金を待っています…`);pollReceipt(w);
 }
 
-function resetQR(){scanner.stop();$('qrScanner').close();clearMerchant();clearCheckout();write('receivedBalance','接続中のウォレットと循環設定の残高を確認してください。');}
+const receiptTime=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+function resetHistory(){historyEpoch++;merchantHistory=null;historyBusy=false;historyLastAttempt=0;historyAgain=false;historyCache=new Map();$('receiptHistoryRows').replaceChildren();write('todayReceived','—');write('receiptHistoryNote','接続すると、この受取口座の履歴をチェーンから読み込みます。');}
+function renderHistory(){
+ if(!merchantHistory)return;const state=merchantHistory.snapshot(),summary=historySummary(state,Number(chainTime));
+ write('todayReceived',`${summary.total} WARA${summary.complete?'':'（取得済み分）'}`);
+ write('receiptHistoryNote',`${receiptTime.format(new Date(Number(chainTime)*1000)).split(' ')[0]} · 日本時間 · 今日${summary.count}件。${summary.complete?'今日の範囲を取得しました。':'今日の全件を取得できていません。「続きを読み込む」で確認してください。'} 受取履歴${state.entries.length}件を表示。`);
+ const rows=$('receiptHistoryRows');rows.replaceChildren();
+ for(const entry of state.entries){
+  const tr=document.createElement('tr');
+  const values=[entry.blockTime===null?'時刻不明':receiptTime.format(new Date(entry.blockTime*1000)),`${entry.amount} WARA`,entry.method==='daily'?'日次枠払い':entry.method==='credit'?'WARA払い':'その他の受取'];
+  for(const value of values){const td=document.createElement('td');td.textContent=value;tr.append(td);}
+  const detail=document.createElement('td');detail.textContent=entry.reference?`お会計 ${entry.reference.slice(0,8)}…`:'お会計番号なし';
+  if(entry.reference)detail.title=entry.reference;
+  if(entry.payer){const sender=document.createElement('small');sender.textContent=`支払元 ${entry.payer.slice(0,8)}…`;sender.title=entry.payer;detail.append(sender);}tr.append(detail);
+  const linkCell=document.createElement('td'),link=document.createElement('a');link.href=`https://explorer.solana.com/tx/${entry.signature}?cluster=devnet`;link.target='_blank';link.rel='noopener noreferrer';link.textContent='取引を見る';linkCell.append(link);tr.append(linkCell);rows.append(tr);
+ }
+ if(!state.entries.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='取得した範囲に受取はありません。';tr.append(td);rows.append(tr);}controls();
+}
+async function updateHistory(force=false,more=false){
+ if(!wallet||!instance)return;
+ if(historyBusy){if(force&&!more)historyAgain=true;return;}
+ if(!force&&Date.now()-historyLastAttempt<60000)return;
+ const s=snapshot(),epoch=historyEpoch;historyBusy=true;historyLastAttempt=Date.now();controls();
+ write('receiptHistoryNote','チェーンの受取履歴を読み込んでいます…');
+ try{
+  await assertDevnet(connection);const t=await readClock(connection);unchanged(s);if(epoch!==historyEpoch)return;
+  chainTime=t;clockReadAt=Date.now();
+  const reader=more&&merchantHistory?merchantHistory:historyReader(connection,{program:s.program,config:s.config,mint:instance.mint,recipient:s.wallet},historyCache);
+  // At most 100 account transactions per refresh; never present a partial sum as a full daily total.
+  let state;for(let i=0;i<(more?1:5);i++){state=await reader.load();unchanged(s);if(epoch!==historyEpoch)return;if(state.done||more||historySummary(state,Number(t)).complete)break;}
+  merchantHistory=reader;renderHistory();
+ }catch(e){if(epoch===historyEpoch){write('receiptHistoryNote',`履歴の更新を完了できませんでした。${e.message||e} 表示済みの合計は更新前の値です。もう一度更新してください。`);}}
+ finally{if(epoch===historyEpoch){historyBusy=false;controls();if(historyAgain){historyAgain=false;updateHistory(true);}}}
+}
+$('refreshHistory').onclick=()=>updateHistory(true);$('moreHistory').onclick=()=>updateHistory(true,true);
+
+function resetQR(){resetHistory();scanner.stop();$('qrScanner').close();clearMerchant();clearCheckout();write('receivedBalance','接続中のウォレットと循環設定の残高を確認してください。');}
 function validateCheckout(){if(!checkoutRequest)return;parseRequest(JSON.stringify(checkoutRequest),qrContext());
  if(!$('confirmCheckout').checked||$('recipient').value!==checkoutRequest.recipient||$('amount').value!==checkoutRequest.amount)throw Error('QRの宛先と金額をもう一度確認してください。');}
 function readQr(raw){

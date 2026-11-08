@@ -52,6 +52,13 @@
 <button id="refreshReceived" disabled>残高・入金を再確認</button><p id="receivedBalance" role="status">Phantomに接続すると、チェーン上のWARA残高を確認できます。</p>
 <p class="small">お会計番号・宛先・金額と、成功した取引での実際の入金を照合します。別のお会計や番号なしの送金は、このお会計の受取完了にしません。古いQR・手入力の送金は残高とExplorerで確認してください。</p>
 <p class="small">確認中はこの画面を開いておいてください。別タブへ移ると一時停止し、戻ると再開します。QRは10分間有効、送信の遅れを考慮してさらに2分確認します。再読み込み・ウォレットや循環設定の変更・QRの作り直しで確認対象は解除されます。結果が不明なときは再決済の前にExplorerで確認してください。</p></section>
+<section id="receipt-history"><h2>店側：今日の受取とお会計履歴</h2>
+<p>今日受け取ったWARA <strong id="todayReceived" class="received-total">—</strong></p>
+<p id="receiptHistoryNote" role="status">接続すると、この受取口座の履歴をチェーンから読み込みます。</p>
+<button id="refreshHistory" disabled>受取履歴を更新</button> <button id="moreHistory" disabled>続きを読み込む</button>
+<div class="history-scroll"><table class="receipt-history-table"><caption>新しい受取から表示（時刻は日本時間）</caption><thead><tr><th scope="col">日時</th><th scope="col">受取額</th><th scope="col">支払い方法</th><th scope="col">お会計・支払元</th><th scope="col">チェーン記録</th></tr></thead><tbody id="receiptHistoryRows"></tbody></table></div>
+<p class="small">日本時間の午前0時からの受取額です。今の残高とは別で、その後に支払ってもこの合計は減りません。通常版と120秒体験版は別集計で、どちらも日本時間の一日で数えます。番号なしの送金も含みます。複数の入出金を含む一つの取引は、受取口座の正味の増加額を一件として表示します。</p>
+<p class="small">履歴はこのウォレットのWARA受取口座から読み直します。再読み込み後も確認でき、端末への履歴保存は行いません。約1分ごとと受取完了時に更新します。古い履歴は「続きを読み込む」で表示できます。更新時は最新の範囲に戻ります。取得が途中なら合計に「取得済み分」と表示します。</p></section>
 <dialog id="qrScanner" aria-labelledby="scannerTitle"><h2 id="scannerTitle">QRを読み取る</h2><video id="qrVideo" autoplay muted playsinline></video><canvas id="qrCanvas" hidden></canvas><p id="scannerStatus" role="status"></p><p class="small">映像と選んだ画像は、この端末内で処理します。サーバーへ送信しません。このアプリ専用のQRです。</p><button id="stopScanner">閉じる・カメラを止める</button></dialog>
 <section aria-live="polite"><h2>操作の記録</h2><p id="status">接続して始めてください。</p><ol id="transactions"></ol></section>
 <footer><p>銀行や決済サーバーが停止した時の、小さな地場経済のための実験。ネットと電気、Solanaへの接続が必要です。ここで使うのは価値を持たないDevnetトークンです。</p><a href="https://github.com/kentaroid-bot/emergency-straw-protocol">MIT · ソースと設計</a></footer>

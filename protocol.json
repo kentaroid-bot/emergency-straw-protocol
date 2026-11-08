@@ -87,7 +87,7 @@
     "demonstration_day_seconds": 120,
     "identity_scope": "wallet-per-instance-not-unique-person",
     "deployment_manifest": "deployments/devnet.json",
-    "verification": "29 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
+    "verification": "34 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
     "compute_budget": {
       "units": 200000,
       "micro_lamports_per_unit": 0
@@ -108,5 +108,12 @@
     "lifetime": "visible page; QR 10 minutes plus 2 minute grace; no persistent invoice state",
     "legacy": "v1 or manual-address payments require manual confirmation",
     "invoice_uniqueness_enforced_on_chain": false
+  },
+  "receipt_history": {
+    "source": "confirmed transactions of the wallet associated WARA token account",
+    "day_boundary": "Asia/Tokyo midnight, for both daily and demo instances",
+    "amount": "positive net token increase per successful transaction, deduplicated by signature",
+    "storage": "chain re-fetch, no browser persistent history",
+    "partial_total": "labelled when day coverage or timestamps are incomplete"
   }
 }

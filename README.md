@@ -134,6 +134,16 @@ Desktop Phantom was verified in Brave. Mobile users can open the URL in Phantom'
 
 Current single-signer check: checkout QR image → Phantom → direct Devnet payment of 10, followed by a 1 WARA transfer through the same button. No merchant signature was requested. [Verification receipt](deployments/phantom-single-signer.json).
 
+### 店側の受取合計・履歴
+
+「店側：今日の受取とお会計履歴」に、日本時間の午前0時からの受取合計、日時・金額・支払い方法（日次枠払い / WARA払い / その他）・お会計番号・支払元・Explorerリンクを表示します。通常版と120秒体験版はMintごとに分かれ、どちらも集計日は日本時間です。
+
+集計は現在残高と別です。100と10を受け取り、その後100を支払った場合、残高は10でも今日の受取合計は110です。ウォレットに対応するWARAのAssociated Token Accountについて、成功したconfirmed以上の取引での正味の増加を一件とし、署名で重複排除します。番号なしの送金も含み、複数の入出金をまとめた複合取引は正味の増加額です。別のトークン口座にある同一Mintの入金はこの一覧に含めません。会計上の売上・収益を確定する帳簿ではありません。
+
+履歴は端末に保存せずチェーンから読み直すため、画面の再読み込み後も接続すれば復元できます。読み取れるRPC履歴の範囲に依存します。約1分ごと・受取完了時・「受取履歴を更新」で最新化し、初回/更新は最大100件の口座取引を確認します。「続きを読み込む」は20件ずつ過去へ進みます。今日の範囲が未取得、または時刻不明の取引があれば合計に「取得済み分」と表示し、全件合計と区別します。失敗した取得では前回の値を残して未更新と表示します。更新時は表示範囲を最新側へ戻します。通常版/体験版の切替・ウォレット切替/切断時は前の表示と読取状態を解除します。
+
+検証：日本時間の日付境界、整数精度、重複排除、取得失敗時の再試行、送金・失敗取引の除外をテスト。実Devnetの110 WARA/2件（日次枠払い）と100 WARA/1件（WARA払い）を照合し、受取専用テスト接続のローカル画面で再読み込み・循環設定の切替を確認しました。[検証結果](deployments/receipt-history.json)。
+
 ### アドレスを打たずに、QRでお会計
 
 1. **店側**：Phantomに接続し、「お会計QRを出す」で金額を入れてQRを作ります。
