@@ -87,13 +87,26 @@
     "demonstration_day_seconds": 120,
     "identity_scope": "wallet-per-instance-not-unique-person",
     "deployment_manifest": "deployments/devnet.json",
-    "verification": "23 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
+    "verification": "29 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
     "compute_budget": {
       "units": 200000,
       "micro_lamports_per_unit": 0
     },
     "recipient_signature_required": false,
-    "checkout_schema": "wara-devnet/request/1",
-    "signed_return_transport": false
+    "checkout_schema": "wara-devnet/request/2",
+    "signed_return_transport": false,
+    "legacy_checkout_schema": "wara-devnet/request/1"
+  },
+  "receipt_confirmation": {
+    "transport": "app-specific checkout QR v2 with public reference",
+    "finality": "confirmed or finalized",
+    "checks": [
+      "reference on payment instruction",
+      "exact recipient, mint, amount and supported instruction",
+      "successful transaction and exact recipient token balance increase"
+    ],
+    "lifetime": "visible page; QR 10 minutes plus 2 minute grace; no persistent invoice state",
+    "legacy": "v1 or manual-address payments require manual confirmation",
+    "invoice_uniqueness_enforced_on_chain": false
   }
 }

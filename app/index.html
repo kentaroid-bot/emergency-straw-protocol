@@ -1,6 +1,6 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>藁一本の約束 · Devnet</title><link rel="stylesheet" href="/devnet/style.css"><script defer src="/devnet/app.js"></script></head><body><main>
 <header><a href="/mock/">ウォレットなしで仕組みを見る</a><p class="eyebrow">SOLANA DEVNET · TEST TOKENS ONLY</p><h1>藁一本の約束</h1><p>使われない枠は消え、一度価値に置き換えられたお金だけが残る。</p></header>
-<section class="guide"><h2>はじめて試す方へ</h2><p>この体験では実際の商品やお金を使わず、食料を渡したつもりで操作します。まずは二人で、同じ「循環の速さ」を選んでください。</p><ol><li>PCの<a href="https://phantom.com/" target="_blank" rel="noopener noreferrer">Phantom拡張</a>を使い、テスト用アカウントとテストネットモードを選びます。スマートフォンはPhantomアプリ内ブラウザでこのURLを開いてください（モバイル実機は未検証）。</li><li><a href="https://faucet.solana.com/" target="_blank" rel="noopener noreferrer">公式Faucet</a>で自分のSolanaアドレスに無料のDevnet SOLを受け取ります。登録・支払いの手数料用です。SOLを購入する必要はありません。</li><li>双方がPhantomに接続し、支払う側が参加登録します。店側が「お会計QRを出す」で金額100のQRを作り、買う人が読み取ります。相手と金額を確認して「今日の300の枠から払う」を選び、「支払う」から署名します。</li><li>店側は「3. 着金を確認する」で残高を更新します。受領署名も返送QRも必要ありません。支払側は「残高を更新」で残り200、受取側はクレジット100を確認できます。</li><li>「体験用・120秒」を二人とも選ぶと、次の枠が300に戻ってもクレジットが残る様子を短時間で試せます。通常版とは別の残高です。</li></ol><p class="small">一人で試す時は、二つのテスト用アカウントを別ブラウザや別端末で開きます。同じアドレスへの支払いはできません。Phantomの署名画面では宛先と金額を確認してください。ページには秘密鍵や復元フレーズを入力しません。</p></section>
+<section class="guide"><h2>はじめて試す方へ</h2><p>この体験では実際の商品やお金を使わず、食料を渡したつもりで操作します。まずは二人で、同じ「循環の速さ」を選んでください。</p><ol><li>PCの<a href="https://phantom.com/" target="_blank" rel="noopener noreferrer">Phantom拡張</a>を使い、テスト用アカウントとテストネットモードを選びます。スマートフォンはPhantomアプリ内ブラウザでこのURLを開いてください（モバイル実機は未検証）。</li><li><a href="https://faucet.solana.com/" target="_blank" rel="noopener noreferrer">公式Faucet</a>で自分のSolanaアドレスに無料のDevnet SOLを受け取ります。登録・支払いの手数料用です。SOLを購入する必要はありません。</li><li>双方がPhantomに接続し、支払う側が参加登録します。店側が「お会計QRを出す」で金額100のQRを作り、買う人が読み取ります。相手と金額を確認して「今日の300の枠から払う」を選び、「支払う」から署名します。</li><li>店側はQRを出した画面を開いて待ちます。入金が確認できると「100 WARA受け取りました」と自動表示されます。受領署名・返送QR・残高更新の操作は不要です。</li><li>「体験用・120秒」を二人とも選ぶと、次の枠が300に戻ってもクレジットが残る様子を短時間で試せます。通常版とは別の残高です。</li></ol><p class="small">一人で試す時は、二つのテスト用アカウントを別ブラウザや別端末で開きます。同じアドレスへの支払いはできません。Phantomの署名画面では宛先と金額を確認してください。ページには秘密鍵や復元フレーズを入力しません。</p></section>
 <section><h2>今日を生きる、300の約束</h2><p>日次枠からの支払いは、一日の累計300まで。買う人の署名で取引が成立すると、相手に本トークンが発行されます。店側の署名は不要です。すでに持っている本トークンでも支払えます。こちらは日次枠を使わず、相手へ移動します。</p><label>循環の速さ<select id="instance"><option value="daily">一日・日本時間の午前0時更新</option><option value="demo">体験用・120秒を一日として更新</option></select></label><p id="deployment" role="status">配備情報を確認しています…</p><button id="connect">Phantomに接続</button> <button id="disconnect" disabled>切断</button><p id="wallet">未接続</p><p class="small">テスト用ウォレットを使い、Phantomの設定でテストネットモードを有効にしてください。</p></section>
 <section id="daily-limit"><h2>今は「ウォレットごとに1日300」です</h2>
 <p><strong>「一人につき1日300」は、まだ実現していません。</strong>同じ人が複数のウォレットを登録すると、それぞれで枠を使えます。同じ循環設定で3つ登録すれば、合計900の枠を使える状態になります。登録だけで本トークンが発行されるわけではありません。</p>
@@ -24,7 +24,8 @@
 <label>店名・受取人の呼び名（任意）<input id="merchantLabel" maxlength="40" placeholder="例：となりの八百屋"></label>
 <label>受け取る金額<input id="requestAmount" type="number" min="1" step="1" value="100"></label>
 <button id="makeRequest" disabled>お会計QRを作る</button>
-<div id="requestCard" class="qr-card" hidden><p id="requestSummary"></p><img id="requestQr" alt="買う人が読み取るお会計QR"><p id="requestExpiry" role="status"></p><a id="saveRequestQr" download="wara-checkout.png">QR画像を保存</a><p class="small">QRを出しただけでは受領できません。支払い方法にかかわらず、買う人が署名・送信した後に「着金を確認する」で残高を更新してください。</p></div>
+<p id="receiptStatus" class="receipt-status" role="status" aria-live="polite">お会計QRを作ると、入金を自動で確認します。</p>
+<div id="requestCard" class="qr-card" hidden><p id="requestSummary"></p><img id="requestQr" alt="買う人が読み取るお会計QR"><p id="requestExpiry" role="status"></p><a id="saveRequestQr" download="wara-checkout.png">QR画像を保存</a><p class="small">この画面を開いたままお待ちください。買う人が支払い、チェーン上で入金を確認すると受取完了が表示されます。</p></div>
 <p class="small">お会計QRは10分間有効です。双方で同じ循環設定を選んでください。日次枠で払えるのは残り枠の範囲・最大300までです。表示名は自己申告で、本人確認済みの印ではありません。</p>
 </section>
 <section id="shopping"><h2>2. 買い物の支払い</h2>
@@ -42,10 +43,13 @@
 <button id="pay" disabled>支払う・Phantomで署名</button>
 <p class="small">手数料用のDevnet SOLが必要です。「確認済み」になるまで待ってください。送信結果が分からない時は、操作の記録のExplorerと残高を確認してから次の支払いへ進みます。</p>
 </section>
-<section id="receive-payment"><h2>3. 着金を確認する</h2>
-<p>店側は、買う人の支払い後にWARAの着金を確認します。<strong>日次枠払いでもWARA払いでも、受領署名や返送QRの操作はありません。</strong></p>
-<button id="refreshReceived" disabled>着金を確認する・残高を更新</button><p id="receivedBalance" role="status">Phantomに接続すると、チェーン上のWARA残高を確認できます。</p>
-<p class="small">現在残高とお会計前の残高を比べ、相手・金額を照合してください。この画面は請求ごとの入金を自動照合するものではありません。送信中や署名だけの状態を、支払い済みと扱わないでください。</p></section>
+<section id="receive-payment"><h2>3. 着金は自動で確認</h2>
+<p>店側が作ったお会計QRへの支払いを約6秒ごとに確認します。<strong>日次枠払いもWARA払いも、受領署名や返送QRは不要です。</strong></p>
+<p id="receiptStatusSummary" class="receipt-status" role="status" aria-live="polite">お会計QRを作ると、入金を自動で確認します。</p>
+<p id="receiptDetail" class="small"></p><a id="receiptLink" target="_blank" rel="noopener noreferrer" hidden>確認した入金をExplorerで見る</a>
+<button id="refreshReceived" disabled>残高・入金を再確認</button><p id="receivedBalance" role="status">Phantomに接続すると、チェーン上のWARA残高を確認できます。</p>
+<p class="small">お会計番号・宛先・金額と、成功した取引での実際の入金を照合します。別のお会計や番号なしの送金は、このお会計の受取完了にしません。古いQR・手入力の送金は残高とExplorerで確認してください。</p>
+<p class="small">確認中はこの画面を開いておいてください。別タブへ移ると一時停止し、戻ると再開します。QRは10分間有効、送信の遅れを考慮してさらに2分確認します。再読み込み・ウォレットや循環設定の変更・QRの作り直しで確認対象は解除されます。結果が不明なときは再決済の前にExplorerで確認してください。</p></section>
 <dialog id="qrScanner" aria-labelledby="scannerTitle"><h2 id="scannerTitle">QRを読み取る</h2><video id="qrVideo" autoplay muted playsinline></video><canvas id="qrCanvas" hidden></canvas><p id="scannerStatus" role="status"></p><p class="small">映像と選んだ画像は、この端末内で処理します。サーバーへ送信しません。このアプリ専用のQRです。</p><button id="stopScanner">閉じる・カメラを止める</button></dialog>
 <section aria-live="polite"><h2>操作の記録</h2><p id="status">接続して始めてください。</p><ol id="transactions"></ol></section>
 <footer><p>銀行や決済サーバーが停止した時の、小さな地場経済のための実験。ネットと電気、Solanaへの接続が必要です。ここで使うのは価値を持たないDevnetトークンです。</p><a href="https://github.com/kentaroid-bot/emergency-straw-protocol">MIT · ソースと設計</a></footer>

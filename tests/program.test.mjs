@@ -89,3 +89,14 @@ test('recipient choice cannot bypass a consumed nonce or the wallet-wide daily c
  f.fail(f.send(f.pay(1,f.state().nonce,f.day(),f.bob),[f.alice]));
  assert.equal(f.state().spent,300n);assert.equal(f.balance(f.bob),200n);assert.equal(f.balance(f.carol),100n);
 });
+
+test('readonly receipt reference preserves single-signature mint and transfer authorization',async()=>{
+ const {withReference}=await import('../app/receipt.mjs');const f=fixture(),ref=Keypair.generate().publicKey;
+ const pay=f.pay(300);pay[3]=withReference(pay[3],ref);const tx=f.tx(pay);assert.equal(tx.signatures.length,1);
+ f.ok(f.svm.sendTransaction(getTransactionDecoder().decode(tx.serialize())));assert.equal(f.balance(f.bob),300n);
+ const replay=f.pay(1,0n);replay[3]=withReference(replay[3],Keypair.generate().publicKey);f.fail(f.send(replay));
+ const over=f.pay(1);over[3]=withReference(over[3],ref);f.fail(f.send(over));
+ const src=getAssociatedTokenAddressSync(f.mint,f.bob.publicKey),dst=getAssociatedTokenAddressSync(f.mint,f.carol.publicKey);
+ f.ok(f.send([createAssociatedTokenAccountIdempotentInstruction(f.bob.publicKey,dst,f.carol.publicKey,f.mint),withReference(createTransferCheckedInstruction(src,f.mint,dst,f.bob.publicKey,100n,0),ref)],[f.bob]));
+ assert.equal(f.balance(f.carol),100n);assert.equal(f.balance(f.bob),200n);assert.equal(f.state().spent,300n);assert.equal(f.supply(),300n);
+});

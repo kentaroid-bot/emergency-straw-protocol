@@ -24,5 +24,5 @@ License: MIT. Originator: kentaroid-bot. Dialogue: Gemini. Implementation: Codex
 - scripts/: browser build, dedicated-key Devnet deploy and network smoke test.
 
 Phantom integration and signed Solana transactions are implemented, and the public-network daily cycle is verified.
-Phantom signing has been verified separately using the daily instance. Checkout QR is implemented; signed-return QR and merchant signing have been removed. BLE, long-term offline signing, paper redemption
+Phantom signing has been verified separately using the daily instance. Checkout QR v2 has a unique public reference; active merchant screens poll confirmed Devnet transactions and verify the payment instruction and exact recipient token increase before showing receipt. Legacy/manual payments do not auto-match; polling is in-memory and stops after expiry grace or context changes. Checkout QR is implemented; signed-return QR and merchant signing have been removed. BLE, long-term offline signing, paper redemption
 and inclusive unique-person enrollment remain future work. Use only Devnet test assets.

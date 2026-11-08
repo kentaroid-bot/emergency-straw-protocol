@@ -10,7 +10,7 @@ A small, temporary local economic order, kept as a contingency for the unlikely 
 
 Leave one straw within reach of the people—and AI agents—who might need to finish it. If that day never comes, it can simply remain here.
 
-**Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Deployed on public Devnet, with the full 120-second day cycle verified on-chain. The current payment flow needs only the consumer's signature; merchant countersigning and return QR codes have been removed. Earlier Brave checks of the two-signature flow are historical; see the verification scope in DEVNET.md. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
+**Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Deployed on public Devnet, with the full 120-second day cycle verified on-chain. Merchant checkout QR v2 supports automatic receipt confirmation against confirmed Devnet transactions. The current payment flow needs only the consumer's signature; merchant countersigning and return QR codes have been removed. Earlier Brave checks of the two-signature flow are historical; see the verification scope in DEVNET.md. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
 
 The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens minted only when a payment is accepted**. Unused allowance is an expiring right, never pre-minted supply. Earned producer credit persists. The Devnet prototype enforces this per wallet; unique-person enrollment remains future work.
 
@@ -37,7 +37,7 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 どちらもSolanaのブロックチェーン上で管理します。Webアプリは操作の窓口で、本トークンは対応する別アプリからも送れます。
 
-**店側のお会計QRを読み、買う人が支払い方法を選んでPhantomで署名。店側は着金を確認するだけです。** PCのPhantomと無料のDevnet SOLを用意し、二人で画面の案内に沿って試せます。「120秒を一日」の設定なら、枠の更新とトークンが残る様子を短時間で体験できます。実際のお金や商品は使いません。
+**店側のお会計QRを読み、買う人が支払い方法を選んでPhantomで署名。店側はQR画面を開いて待つだけ。着金すると「100 WARA受け取りました」と自動表示されます。** PCのPhantomと無料のDevnet SOLを用意し、二人で画面の案内に沿って試せます。「120秒を一日」の設定なら、枠の更新とトークンが残る様子を短時間で体験できます。実際のお金や商品は使いません。
 
 👉 [藁一本の約束を試す](https://straw-promise-devnet.kentaroid.chatgpt.site/)
 
@@ -139,15 +139,21 @@ Current single-signer check: checkout QR image → Phantom → direct Devnet pay
 1. **店側**：Phantomに接続し、「お会計QRを出す」で金額を入れてQRを作ります。
 2. **買う人**：「お会計QRを読む」でカメラを向けるか、保存したQR画像を選びます。宛先・金額が自動入力されるので、店頭の相手と金額を確認してチェックします。
 3. **買う人**：日次枠か持っているWARAかを選び、「支払う」からPhantomで署名します。日次枠なら枠の消費と相手への新規発行、WARAなら既存残高の移動を、アプリが選んだ方法に合わせて送信します。
-4. **店側**：「着金を確認する」で残高を更新。どちらの方法でも、返送QRや受領署名は不要です。
+4. **店側**：QRを出した画面を開いて待ちます。入金を確認すると「100 WARA受け取りました」と表示されます。どちらの方法でも、返送QR・受領署名・手動更新は不要です。
+
+**自動確認の仕組み：** お会計ごとにランダムな32バイトのreferenceを作り、買う人が署名する支払命令へ、署名不要・読み取り専用の口座キーとして付けます。店側はDevnet RPCを約6秒ごとに読み、`confirmed`以上の成功した取引だけを対象に、reference、支払命令、Config/Mint、宛先のトークン口座とその取引での増加額を照合します。別の入金や番号だけを載せた取引で受取完了にはしません。[Solana Payのreference方式](https://docs.solanapay.com/spec)を参考にしていますが、QR形式は本アプリ専用です。
+
+自動確認は画面を開いている間だけです。非表示タブでは一時停止し、戻ると再開します。QRの10分に加えて送信待ち用の2分を確認し、通信失敗は「確認待ち」と表示します。成功後はQRを隠して確認を停止し、同じ結果を重複表示しません。再読み込み・切断・ウォレットや循環設定の変更・新しいQRの作成で対象は解除されます。現在は一画面で一件、サーバーでの常駐監視・履歴復元・分割払いの合算は行いません。
+
+古いv1 QRや手入力での送金は引き続き使えますが、自動照合の対象外です。新しいQRを使い、両者とも最新版へ再読み込みしてください。referenceは入金を探す公開番号であり、同じ請求への別取引をチェーンが禁止する機能ではありません。日次300とnonceによる同じ取引の二重使用防止は従来どおりです。結果が不明な場合は、再決済の前にExplorerと残高を確認してください。
 
 QRを読むだけでは支払いません。双方で同じ「一日」または「120秒」を選びます。お会計QRは10分間有効です。署名した取引はそのまま送信します。署名中の日付変更や取引の有効期限切れはチェーンで拒否されます。送信結果が不明な時は、操作記録のExplorerと残高を確認してから作り直してください。
 
-QRは**このアプリ専用**で、Phantomの一般的なQRリーダーやSolana Payとの互換を意味しません。店名は自己申告で、本人確認済みの表示ではありません。請求書番号や「支払済み」の自動照合は未実装のため、店側は毎回、相手・金額・着金を照合します。お会計QRの10分は画面側の入力期限であり、署名済み取引のチェーン上の期限を変更するものではありません。
+QRは**このアプリ専用**で、Phantomの一般的なQRリーダーやSolana Payとの互換を意味しません。店名は自己申告で、本人確認済みの表示ではありません。新しいお会計QR（v2）には固有の公開番号（reference）が入り、アプリはその番号・宛先・金額と実際の入金を自動照合します。お会計QRの10分は画面側の入力期限であり、署名済み取引のチェーン上の期限を変更するものではありません。
 
 カメラはボタンを押した時だけ開始し、読取完了・閉じる操作・画面を離れた時に停止します。映像や選択画像は端末内で処理し、外部へアップロードしません。カメラが使えない場合はPNG・JPEG・WebP画像（10MB以下）の選択、または詳細欄のアドレス手入力を使えます。読み取りには `qrcode` / `jsqr` をアプリに同梱し、外部CDNを使いません。
 
-検証：QR生成→読取と不正な入力の拒否、買う人だけの署名による発行、累計300の上限、同一取引・使用済みnonceの拒否をローカルで確認。Devnet検証記録は `deployments/devnet-smoke.json`。スマートフォン2台でのカメラ操作は未検証です。
+検証：QR生成→読取と不正な入力の拒否、買う人だけの署名による発行、累計300の上限、同一取引・使用済みnonceの拒否をローカルで確認。日次循環のDevnet検証記録は `deployments/devnet-smoke.json`、今回の入金自動確認は [auto-receipt.json](deployments/auto-receipt.json)（専用テスト鍵での送金と、受取接続をテスト用にしたローカル画面による実測）です。スマートフォン2台でのカメラ操作は未検証です。
 
 ## Try it in a minute
 
