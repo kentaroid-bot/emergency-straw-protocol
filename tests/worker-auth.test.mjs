@@ -19,6 +19,7 @@ before(async () => {
     platform: "browser",
   });
   runtime = new Miniflare({
+    enableDevRegistry: false,
     workers: [
       {
         config: {
