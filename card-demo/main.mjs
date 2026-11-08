@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
-import { fresh, transition, PIN } from "./model.mjs";
-const KEY = "straw-card-ui-demo-v1",
+import { fresh, transition, PIN, DAILY_KUSA, COMMUNITIES, balances, distribution } from "./model.mjs";
+const KEY = "straw-card-ui-demo-v3",
   $ = (id) => document.getElementById(id);
 const route = location.pathname.split("/").filter(Boolean)[0];
 const role = ["user", "shop", "support"].includes(route) ? route : "user";
@@ -20,14 +20,12 @@ function read() {
     if (!raw) return fresh();
     const s = JSON.parse(raw);
     if (
-      s.version !== 1 ||
+      s.version !== 3 ||
       !Number.isSafeInteger(s.spent) ||
       s.spent < 0 ||
-      s.spent > 300 ||
+      s.spent > DAILY_KUSA ||
       !Number.isSafeInteger(s.day) ||
       s.day < 1 ||
-      !Number.isSafeInteger(s.shopWara) ||
-      s.shopWara < 0 ||
       !Number.isSafeInteger(s.cardVersion) ||
       s.cardVersion < 1 ||
       !Array.isArray(s.history) ||
@@ -41,7 +39,8 @@ function read() {
       typeof p.id === "string" &&
       Number.isSafeInteger(p.amount) &&
       p.amount >= 1 &&
-      p.amount <= 300 &&
+      p.amount <= DAILY_KUSA &&
+      Object.hasOwn(COMMUNITIES, p.communityId) &&
       Number.isSafeInteger(p.day) &&
       p.day >= 1 &&
       Number.isSafeInteger(p.cardVersion) &&
@@ -58,7 +57,9 @@ function read() {
           validPayment(p) &&
           Number.isSafeInteger(p.remaining) &&
           p.remaining >= 0 &&
-          p.remaining <= 300 &&
+          p.remaining <= DAILY_KUSA &&
+          p.shopCredit === distribution(p.amount).shopCredit &&
+          p.userRefund === distribution(p.amount).userRefund &&
           typeof p.time === "string" &&
           ["pin", "support"].includes(p.method),
       )
@@ -102,7 +103,7 @@ function historyRows(shop = false) {
     ? state.history
         .map(
           (h) =>
-            `<div class="history-row"><div>${shop ? "あおいさん（デモ）" : "田中商店"}<small>体験 ${escape(h.day)}日目 · ${escape(time(h.time))} · ${h.method === "support" ? "確認役が立ち会い" : "デモ暗証番号で確認"}</small></div><strong>${escape(h.amount)} ${shop ? "WARA" : "Kusa"}<small>${shop ? "受取完了" : "支払い完了"}</small></strong></div>`,
+            `<div class="history-row"><div>${shop ? "あおいさん（デモ）" : "田中商店"}<small>${COMMUNITIES[h.communityId]} · 体験 ${escape(h.day)}日目 · ${escape(time(h.time))} · ${h.method === "support" ? "確認役が立ち会い" : "デモ暗証番号で確認"}</small></div><strong>${shop ? h.shopCredit : h.amount} ${shop ? "WARA" : "Kusa"}<small>${shop ? "受取完了" : h.userRefund + " WARA還付"}</small></strong></div>`,
         )
         .join("")
     : '<p class="empty">まだお会計はありません。</p>';
@@ -112,22 +113,26 @@ const link = (href, label, secondary = false) =>
 const today = () =>
   state.history
     .filter((h) => h.day === state.day)
-    .reduce((sum, h) => sum + h.amount, 0);
+    .reduce((sum, h) => sum + h.shopCredit, 0);
 function user() {
+  const remaining = DAILY_KUSA - state.spent;
+  const leaves = Array.from({ length: DAILY_KUSA }, (_, i) =>
+    `<span class="leaf${i < remaining ? "" : " spent"}"></span>`
+  ).join("");
   return `<div class="grid">
-<section class="panel balance"><p class="muted">今日あと使えるKusa</p><div class="big">${300 - state.spent} <small class="gold">Kusa</small></div><p class="muted">あおいさん · Kusaアカウント C-001（デモ）</p><div class="balance-track"><span style="width:${(300 - state.spent) / 3}%"></span></div><p class="small" style="color:#d5e0cf">今日使った ${state.spent} / 300 Kusa · 未使用分は繰越なし</p>
+<section class="panel balance"><p class="muted">今日あと使えるKusa</p><div class="big">${DAILY_KUSA - state.spent} <small class="gold">Kusa</small></div><p class="muted">あおいさん · Kusaアカウント C-001（デモ）</p><div class="leaves" aria-hidden="true">${leaves}</div><p class="small" style="color:#d5e0cf">今日使った ${state.spent} / ${DAILY_KUSA} Kusa</p>
 </section>
-<section class="panel"><h2>持っているWARA</h2><div class="number">0 <small>WARA</small></div><p class="muted">この体験ではKusaだけで買い物します。受け取ったWARAは、翌日も残る対価です。</p><p class="info-strip">WARA用ウォレットの接続は、このモックでは行いません。</p>
+<section class="panel"><h2>持っているWARA</h2><div class="number">${balances(state.history).userWara} <small>WARA</small></div><p class="muted">支払い時に還付されたWARAは翌日も残ります。</p><p class="info-strip">WARA用ウォレットの接続は、このモックでは行いません。</p>
 </section></div>
 <section class="panel"><h2>あなたのQRカード</h2><p class="muted">${state.cardActive ? "紙のカードをお店に出すだけ。端末を持たない人も、地域窓口でカードを受け取る想定です。" : "カードは停止中です。地域窓口で再発行できます。"}</p>
-<div class="actions" style="margin-top:18px"><button id="showCard" ${state.cardActive ? "" : "disabled"}>${cardOpen ? "カードを閉じる" : "QRカードを表示"}</button>${link("/shop", "お店で100 Kusaを試す", true)}</div>${cardOpen && state.cardActive ? `<div class="qr-card"><span class="pill">画面モック専用 · 実際には使えません</span><p><strong>あおいさんの Kusaカード</strong></p><img id="cardQr" alt="デモ参加者C-001を示すQRコード"><p>C-001 · カード ${state.cardVersion}</p><p class="small">公開IDのみ。QRは本人の同意や署名ではありません。</p><button id="printCard" class="secondary">このカードを印刷</button></div>` : ""}</section>
+<div class="actions" style="margin-top:18px"><button id="showCard" ${state.cardActive ? "" : "disabled"}>${cardOpen ? "カードを閉じる" : "QRカードを表示"}</button>${link("/shop", "お店で支払いを試す", true)}</div>${cardOpen && state.cardActive ? `<div class="qr-card"><span class="pill">画面モック専用 · 実際には使えません</span><p><strong>あおいさんの Kusaカード</strong></p><img id="cardQr" alt="デモ参加者C-001を示すQRコード"><p>C-001 · カード ${state.cardVersion}</p><p class="small">公開IDのみ。QRは本人の同意や署名ではありません。</p><button id="printCard" class="secondary">このカードを印刷</button></div>` : ""}</section>
 <section class="panel" id="history"><h2>買い物の履歴</h2>${historyRows()}</section>
 <section class="panel"><h2>カード・暗証番号の相談</h2><p class="muted">なくしたとき、暗証番号を使えないときは地域の窓口へ。端末がない場合は、窓口で残り枠や履歴も確認できる想定です。</p><p>${link("/support", "地域の窓口を見る", true)}</p>
 </section>`;
 }
 function success(receipt) {
   return `
-<section class="panel confirm"><div class="receipt-mark" aria-hidden="true">✓</div><h2>支払いが完了しました</h2><p class="small">デモのお会計 · ${escape(receipt.id)}</p><div class="big">${escape(receipt.amount)} <small>Kusa</small></div><p>田中商店に <b>${escape(receipt.amount)} WARA</b> 届きました</p><div class="receipt-meta"><div>お客さんの支払い直後の残り<strong>${escape(receipt.remaining)} Kusa</strong></div><div>店の今日の受取<strong>${today()} WARA</strong></div></div>
+<section class="panel confirm"><div class="receipt-mark" aria-hidden="true">✓</div><h2>支払いが完了しました</h2><p class="small">デモのお会計 · ${escape(receipt.id)}</p><div class="big">${escape(receipt.amount)} <small>Kusa</small></div><p>店に <b>${receipt.shopCredit} WARA</b>、客に <b>${receipt.userRefund} WARA</b> 還付</p><p>発行元：${COMMUNITIES[receipt.communityId]}</p><div class="receipt-meta"><div>お客さんの支払い直後の残り<strong>${escape(receipt.remaining)} Kusa</strong></div><div>店の今日の受取<strong>${today()} WARA</strong></div></div>
 <div class="actions"><button id="nextCheckout">次のお会計</button>${link("/user", "利用者の残りを確認", true)}<button id="printReceipt" class="secondary">紙の控えを出す</button></div><p class="small">実際の送金はありません。${receipt.method === "support" ? "地域の確認役が立ち会う流れを体験しました。" : "デモ暗証番号で確認しました。"}</p>
 </section>`;
 }
@@ -139,18 +144,19 @@ function shop() {
   if (receipt) panel = success(receipt);
   else if (p?.status === "support")
     panel = `
-<section class="panel confirm"><p class="eyebrow">確認役の立ち会い</p><h2>地域の窓口で確認を待っています</h2><div class="big">${p.amount} <small>Kusa</small></div><p>あおいさん → 田中商店</p><p class="muted">まだ枠は減っていません。店員だけで代理承認する流れにはしません。</p><p>${link("/support", "確認役の画面へ")}</p><button id="cancel" class="secondary">このお会計を取り消す</button>
+<section class="panel confirm"><p class="eyebrow">確認役の立ち会い</p><h2>地域の窓口で確認を待っています</h2><div class="big">${p.amount} <small>Kusa</small></div><p>あおいさん → 田中商店 · ${COMMUNITIES[p.communityId]}</p><p class="muted">まだ枠は減っていません。店員だけで代理承認する流れにはしません。</p><p>${link("/support", "確認役の画面へ")}</p><button id="cancel" class="secondary">このお会計を取り消す</button>
 </section>`;
   else if (p)
     panel = `
-<section class="panel confirm"><p class="flow-steps">カード読取 → <b>本人が金額を確認</b> → 完了</p><h2>田中商店へ支払います</h2><div class="big">${p.amount} <small>Kusa</small></div><p>あおいさん · 支払い後の残り <b>${300 - state.spent - p.amount} Kusa</b></p>
+<section class="panel confirm"><p class="flow-steps">カード読取 → <b>本人が金額を確認</b> → 完了</p><h2>田中商店へ支払います</h2><p>${COMMUNITIES[p.communityId]}</p><div class="big">${p.amount} <small>Kusa</small></div><p>あおいさん · 支払い後の残り <b>${DAILY_KUSA - state.spent - p.amount} Kusa</b></p>
 <form id="payForm"><label class="label" for="pin">本人がデモ暗証番号を入力</label><input id="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required aria-describedby="pinHelp" ${state.attempts >= 3 ? "disabled" : ""}><p class="small" id="pinHelp">体験用は <b>${PIN}</b>。本物の暗証番号は入力しないでください。<br>${state.attempts ? `入力間違い ${state.attempts}/3回。` : ""}</p><button type="submit" ${state.attempts >= 3 ? "disabled" : ""}>${p.amount} Kusaで支払う</button>
 </form><p><button id="askSupport" class="secondary">暗証番号を使えない方</button></p><button id="cancel" class="secondary">取り消す</button>
 </section>`;
   else
     panel = `
 <section class="panel"><p class="flow-steps"><b>金額入力・カード読取</b> → 本人が確認 → 完了</p><h2>新しいお会計</h2>
-<form id="checkoutForm"><label for="checkoutAmount" class="label">受け取る金額</label><div class="input-row"><input id="checkoutAmount" type="number" min="1" max="${300 - state.spent}" step="1" value="100" required><small>Kusa</small></div><button type="submit" ${state.cardActive ? "" : "disabled"}>デモカードを読み取る</button>
+<form id="checkoutForm"><label for="community" class="label">発行コミュニティ</label><select id="community">${Object.entries(COMMUNITIES).map(([id, name]) => `<option value="${id}">${name}</option>`).join("")}</select>
+<label for="checkoutAmount" class="label">支払い額（残り ${DAILY_KUSA - state.spent} Kusa）</label><div class="actions presets"><button type="button" id="coffee" class="secondary" ${state.spent >= DAILY_KUSA ? "disabled" : ""}>コーヒー · 1 Kusa</button><button type="button" id="meal" class="secondary" ${DAILY_KUSA - state.spent < 5 ? "disabled" : ""}>定食 · 5 Kusa</button></div><div class="input-row"><input id="checkoutAmount" type="number" min="1" max="${DAILY_KUSA - state.spent}" step="1" value="${state.spent < DAILY_KUSA ? 1 : ""}" required ${state.spent === DAILY_KUSA ? "disabled" : ""}><small>Kusa</small></div><button type="submit" ${state.cardActive && state.spent < DAILY_KUSA ? "" : "disabled"}>デモカードを読み取る</button>
 </form><p class="small">カメラの代わりに、あおいさんのデモカードを読み取った状態へ進みます。</p>${!state.cardActive ? '<p class="disabled-note">カードは停止中です。地域窓口で再発行してください。</p>' : ""}<p class="info-strip">店員が金額を入れたら、次の画面をお客さんに向けます。</p>
 </section>`;
   return (
@@ -158,9 +164,9 @@ function shop() {
     `<div class="grid">
 <section class="panel"><h2>今日の受取</h2><div class="number">${today()} <small>WARA</small></div><p class="muted">体験 ${state.day}日目 · ${state.history.filter((h) => h.day === state.day).length}件</p>
 </section>
-<section class="panel"><h2>店のWARA残高</h2><div class="number">${state.shopWara} <small>WARA</small></div><p class="muted">翌日に進んでも残ります。</p>
+<section class="panel"><h2>店のWARA残高</h2><div class="number">${balances(state.history).shopWara} <small>WARA</small></div><p class="muted">翌日に進んでも残ります。</p>
 </section></div>
-<section class="panel"><h2>お会計ごとの受取履歴</h2>${historyRows(true)}</section><details class="panel"><summary>店の設定（見本）</summary><p>田中商店 · みどり地区（架空）</p><p class="small">受取先：デモ店舗 S-001。店舗登録・ウォレット設定・店員権限は未実装です。</p></details>`
+<section class="panel"><h2>お会計ごとの受取履歴</h2>${historyRows(true)}</section><details class="panel"><summary>店の設定（見本）</summary><p>田中商店（デモ）</p><p class="small">受取先：デモ店舗 S-001。店舗登録・ウォレット設定・店員権限は未実装です。</p></details>`
   );
 }
 function support() {
@@ -168,12 +174,12 @@ function support() {
   return `
 <section class="panel"><p class="eyebrow">立ち会い承認</p><h2>${p?.status === "support" ? "確認を待っているお会計" : "今は立ち会いの依頼がありません"}</h2>${
     p?.status === "support"
-      ? `<p>あおいさん → <b>田中商店</b></p><div class="number">${p.amount} <small>Kusa</small></div><p>支払い後の残り：<b>${300 - state.spent - p.amount} Kusa</b></p>
+      ? `<p>あおいさん → <b>田中商店</b> · ${COMMUNITIES[p.communityId]}</p><div class="number">${p.amount} <small>Kusa</small></div><p>支払い後の残り：<b>${DAILY_KUSA - state.spent - p.amount} Kusa</b></p>
 <form id="supportForm"><label class="check"><input id="consent" type="checkbox" required><span>本人と店名・金額を確認し、本人がこの支払いを希望していることを確かめました（デモ）。</span></label><button type="submit">確認役として承認する（デモ）</button>
 </form><p class="small">確認役：地域窓口の青葉さん（架空）。この画面は誰でも切り替えられるモックで、実際の権限チェックはありません。</p>`
       : `<p class="muted">店の金額確認画面で「暗証番号を使えない方」を選ぶと、ここに届きます。</p>${link("/shop", "店の画面へ", true)}`
   }</section><div class="support-list">
-<section class="panel"><h2>カードの相談</h2><p>あおいさん · C-001</p><p><span class="pill">${state.cardActive ? "カード有効" : "カード停止中"} · 第${state.cardVersion}版</span></p><p class="muted">今日の残り：${300 - state.spent} Kusa</p>
+<section class="panel"><h2>カードの相談</h2><p>あおいさん · C-001</p><p><span class="pill">${state.cardActive ? "カード有効" : "カード停止中"} · 第${state.cardVersion}版</span></p><p class="muted">今日の残り：${DAILY_KUSA - state.spent} Kusa</p>
 <div class="actions" style="margin-top:18px"><button id="stopCard" class="danger" ${state.cardActive ? "" : "disabled"}>カードを停止</button><button id="reissueCard" class="secondary">再発行を試す</button></div><p class="small">再発行しても今日の使用額は引き継ぎます。進行中のお会計は取り消されます。デモの暗証番号は123456です。</p>
 </section>
 <section class="panel"><h2>初めての参加・利用相談</h2><p class="muted">地域で実在と重複登録を確認し、Kusaアカウントとカードを用意する想定です。</p><p class="info-strip">この体験ではC-001を登録済みとして用意しています。実際の受付・本人確認・暗証番号再設定は未実装です。</p>${link("/user", "残り枠と履歴を見る", true)}</section></div>`;
@@ -192,7 +198,7 @@ function checkoutURL(id) {
 function render() {
   const meta = {
     user: ["今日のあなたの財布", "今日使える枠と買い物の履歴を確認できます。"],
-    shop: ["田中商店のレジ", "みどり地区 · 店も人も架空のデモです。"],
+    shop: ["田中商店のレジ", "お会計ごとに発行コミュニティを選べます。"],
     support: [
       "地域の確認窓口",
       "支払いへの立ち会いと、カードの停止・再発行ができます。",
@@ -228,6 +234,8 @@ function render() {
   }
   for (const id of ["printCard", "printReceipt"])
     bind(id, "click", () => window.print());
+  for (const [id, amount] of [["coffee", 1], ["meal", 5]])
+    bind(id, "click", () => { $("checkoutAmount").value = amount; });
   bind("checkoutForm", "submit", (e) => {
     e.preventDefault();
     const id = crypto.randomUUID();
@@ -235,6 +243,7 @@ function render() {
       update({
         type: "checkout",
         id,
+        communityId: $("community").value,
         amount: Number($("checkoutAmount").value),
       })
     ) {
@@ -308,14 +317,14 @@ $("nextDay").onclick = () => {
     if (role === "shop") checkoutURL(null);
     render();
     message(
-      "体験の日付を進めました。Kusaは300に更新され、店のWARAは残ります。",
+      "体験の日付を進めました。Kusaは10に更新され、店と客のWARAは残ります。",
     );
   }
 };
 $("resetDemo").onclick = () => {
   if (
     !window.confirm(
-      "このブラウザの体験データを消して、300 Kusaからやり直しますか？",
+      "このブラウザの体験データを消して、10 Kusaからやり直しますか？",
     )
   )
     return;

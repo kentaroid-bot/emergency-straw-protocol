@@ -229,18 +229,17 @@ h3 {
 .gold {
   color: #e6c76a;
 }
-.balance-track {
-  height: 6px;
-  background: #496b54;
-  margin: 22px 0 12px;
-  border-radius: 9px;
-  overflow: hidden;
+.leaves { display: flex; gap: clamp(3px, 1vw, 8px); margin: 20px 0 12px; }
+.leaf {
+  width: 18px;
+  height: 24px;
+  border-radius: 80% 0 80% 0;
+  background: #c4e59b;
+  border: 1px solid #c4e59b;
 }
-.balance-track span {
-  display: block;
-  height: 100%;
-  background: #dbc16f;
-}
+.leaf.spent { background: transparent; }
+#community { font: inherit; padding: 10px; margin-bottom: 18px; }
+.presets { margin-bottom: 12px; }
 .number {
   font-size: 36px;
   font-weight: 700;

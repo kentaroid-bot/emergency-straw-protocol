@@ -1,9 +1,28 @@
 export const PIN = "123456";
+export const DAILY_KUSA = 10;
+export const COMMUNITIES = Object.freeze({
+  "midori-shoptown": "みどり商店街",
+  "waseda-univ": "早稲田大学",
+});
+
+export function distribution(amount) {
+  const issued = amount * 100;
+  const userRefund = issued / 10;
+  return { shopCredit: issued - userRefund, userRefund };
+}
+
+// Both credits in a receipt have the same issuing community.
+export function balances(receipts) {
+  return receipts.reduce((total, receipt) => ({
+    shopWara: total.shopWara + receipt.shopCredit,
+    userWara: total.userWara + receipt.userRefund,
+  }), { shopWara: 0, userWara: 0 });
+}
+
 export const fresh = () => ({
-  version: 1,
+  version: 3,
   day: 1,
   spent: 0,
-  shopWara: 0,
   cardVersion: 1,
   cardActive: true,
   attempts: 0,
@@ -20,12 +39,15 @@ export function transition(state, action) {
     if (
       !Number.isInteger(action.amount) ||
       action.amount < 1 ||
-      action.amount > 300 - s.spent
+      action.amount > DAILY_KUSA - s.spent
     )
       throw Error("今日の残りKusaの範囲で、1以上の整数を入力してください。");
     if (!action.id || s.history.some((x) => x.id === action.id))
       throw Error("このお会計番号は使用済みです。");
+    if (!Object.hasOwn(COMMUNITIES, action.communityId))
+      throw Error("発行コミュニティを選んでください。");
     s.pending = {
+      communityId: action.communityId,
       id: action.id,
       amount: action.amount,
       day: s.day,
@@ -55,15 +77,15 @@ export function transition(state, action) {
       }
     } else if (p.status !== "support" || !action.consent)
       throw Error("本人と店名・金額への同意を確認してください。");
-    if (p.amount > 300 - s.spent) throw Error("今日の残りKusaを超えています。");
+    if (p.amount > DAILY_KUSA - s.spent) throw Error("今日の残りKusaを超えています。");
     s.spent += p.amount;
-    s.shopWara += p.amount;
     s.attempts = 0;
     s.history.unshift({
       ...p,
+      ...distribution(p.amount),
       status: "paid",
       method: action.type === "pay" ? "pin" : "support",
-      remaining: 300 - s.spent,
+      remaining: DAILY_KUSA - s.spent,
       time: action.time,
     });
     s.pending = null;
