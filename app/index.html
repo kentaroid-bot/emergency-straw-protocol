@@ -25,7 +25,8 @@
 <label>受け取る金額<input id="requestAmount" type="number" min="1" step="1" value="100"></label>
 <button id="makeRequest" disabled>お会計QRを作る</button>
 <p id="receiptStatus" class="receipt-status" role="status" aria-live="polite">お会計QRを作ると、入金を自動で確認します。</p>
-<div id="requestCard" class="qr-card" hidden><p id="requestSummary"></p><img id="requestQr" alt="買う人が読み取るお会計QR"><p id="requestExpiry" role="status"></p><a id="saveRequestQr" download="wara-checkout.png">QR画像を保存</a><p class="small">この画面を開いたままお待ちください。買う人が支払い、チェーン上で入金を確認すると受取完了が表示されます。</p></div>
+<button id="nextCheckout" hidden>次のお会計</button>
+<div id="requestCard" class="qr-card" hidden><p id="requestSummary"></p><img id="requestQr" alt="買う人が読み取るお会計QR"><p id="requestExpiry" role="status"></p><a id="saveRequestQr" download="wara-checkout.png">QR画像を保存</a><p class="small">この画面を開いたままお待ちください。買う人が支払い、チェーン上で入金を確認すると受取完了が表示されます。「次のお会計」で続けて次のお客さんの金額を入力できます。</p></div>
 <p class="small">お会計QRは10分間有効です。双方で同じ循環設定を選んでください。日次枠で払えるのは残り枠の範囲・最大300までです。表示名は自己申告で、本人確認済みの印ではありません。</p>
 </section>
 <section id="shopping"><h2>2. 買い物の支払い</h2>
@@ -46,6 +47,7 @@
 <section id="receive-payment"><h2>3. 着金は自動で確認</h2>
 <p>店側が作ったお会計QRへの支払いを約6秒ごとに確認します。<strong>日次枠払いもWARA払いも、受領署名や返送QRは不要です。</strong></p>
 <p id="receiptStatusSummary" class="receipt-status" role="status" aria-live="polite">お会計QRを作ると、入金を自動で確認します。</p>
+<button id="nextCheckoutSummary" hidden>次のお会計</button>
 <p id="receiptDetail" class="small"></p><a id="receiptLink" target="_blank" rel="noopener noreferrer" hidden>確認した入金をExplorerで見る</a>
 <button id="refreshReceived" disabled>残高・入金を再確認</button><p id="receivedBalance" role="status">Phantomに接続すると、チェーン上のWARA残高を確認できます。</p>
 <p class="small">お会計番号・宛先・金額と、成功した取引での実際の入金を照合します。別のお会計や番号なしの送金は、このお会計の受取完了にしません。古いQR・手入力の送金は残高とExplorerで確認してください。</p>

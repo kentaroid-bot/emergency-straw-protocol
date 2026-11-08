@@ -18,6 +18,7 @@ function showPaymentMethod(){const daily=usingDaily();
  write('paymentExplanation',daily?'あなたの署名で支払いが成立すると、今日の枠は300から200へ、相手には100 WARAを新規発行。自分が持っているWARAは減りません。店側の署名は不要です。':'WARAを100持っていて40支払うと、自分は60、相手は40増えます。新規発行なし・今日の枠は変わりません。残高の範囲で300を超える支払いもできます。店側の署名は不要です。');
  if(daily)$('amount').max='300';else $('amount').removeAttribute('max');controls();}
 function controls(){const blocked=busy||scanning,ready=Boolean(wallet&&instance)&&!blocked,confirmed=!checkoutRequest||($('confirmCheckout').checked&&Date.now()<checkoutRequest.expiresAt);for(const id of ['enroll','refresh','refreshReceived','makeRequest'])$(id).disabled=!ready;
+ for(const id of ['nextCheckout','nextCheckoutSummary']){const button=$(id);button.hidden=!receiptWatch?.done;button.disabled=!ready||!receiptWatch?.done;}
  for(const id of ['scanRequest','requestFile'])$(id).disabled=blocked||!instance;
  for(const id of ['merchantLabel','requestAmount','recipient','amount','confirmCheckout','clearCheckout'])$(id).disabled=blocked;
  $('pay').disabled=!ready||!confirmed||(usingDaily()?!person:credit===0n);for(const id of ['payDaily','payCredit'])$(id).disabled=blocked;$('enroll').disabled=!ready||Boolean(person);$('connect').disabled=blocked||Boolean(wallet);$('disconnect').disabled=blocked||!wallet;$('instance').disabled=blocked;}
@@ -96,7 +97,7 @@ function receiptMessage(text,kind='waiting'){
  for(const id of ['receiptStatus','receiptStatusSummary']){write(id,text);$(id).className=`receipt-status ${kind}`;}
 }
 function stopReceipt(){if(receiptWatch)clearTimeout(receiptWatch.timer);receiptWatch=null;}
-function clearMerchant(){stopReceipt();merchantRequest=null;$('requestCard').hidden=true;removeQr();$('receiptLink').hidden=true;write('receiptDetail','');receiptMessage('お会計QRを作ると、入金を自動で確認します。');}
+function clearMerchant(){stopReceipt();merchantRequest=null;$('requestCard').hidden=true;removeQr();$('receiptLink').hidden=true;write('receiptDetail','');receiptMessage('お会計QRを作ると、入金を自動で確認します。');controls();}
 async function pollReceipt(w,manual=false){
  if(receiptWatch!==w||w.pending||w.done)return;
  clearTimeout(w.timer);
@@ -107,7 +108,7 @@ async function pollReceipt(w,manual=false){
   await assertDevnet(connection);const result=await w.check();
   if(receiptWatch!==w)return;
   if(result){
-   w.done=true;receiptMessage(`${result.amount} WARA受け取りました`,'received');
+   w.done=true;receiptMessage(`${result.amount} WARA受け取りました`,'received');controls();
    write('receiptDetail',`${result.method==='daily'?'日次枠からの支払い':'WARA残高からの支払い'} · 宛先・金額・お会計番号が一致し、チェーンで確認済み。支払元：${result.payer}`);
    $('receiptLink').href=`https://explorer.solana.com/tx/${result.signature}?cluster=devnet`;$('receiptLink').hidden=false;
    $('requestCard').hidden=true;removeQr();logSignature(result.signature).append(' · 入金確認済み');
@@ -149,6 +150,14 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){scanner.st
 for(const [id,kind] of [['requestFile','request']])$(id).onchange=()=>{const file=$(id).files[0];$(id).value='';task(async()=>{scanGeneration=generation;await scanner.file(file,kind);});};
 $('makeRequest').onclick=()=>task(async()=>{const s=snapshot();clearMerchant();await assertDevnet(connection);const minSlot=await connection.getSlot('confirmed');unchanged(s);const raw=createRequest(qrContext(),wallet,$('requestAmount').value,$('merchantLabel').value),data=parseRequest(raw,qrContext()),image=await qrImage(raw);unchanged(s);merchantRequest=data;setQr('request',image);write('requestSummary',`${data.label||'あなた'}へのお会計：${data.amount} WARA相当 · ${instance.period===120n?'120秒体験版':'一日循環'}`);qrTick();startReceipt(data,minSlot);notice('お会計QRを作りました。この画面を開いたまま、買う人に読み取ってもらってください。入金を自動確認します。');});
 for(const id of ['merchantLabel','requestAmount'])$(id).oninput=clearMerchant;
+function nextCheckout(){
+ if(busy||scanning||!wallet||!instance||!receiptWatch?.done)return;
+ clearMerchant();$('requestAmount').value='';
+ receiptMessage('次のお客さんの金額を入力して、お会計QRを作ってください。');
+ $('checkout').scrollIntoView({block:'start'});$('requestAmount').focus({preventScroll:true});
+ notice('次のお会計を準備しています。店名・受取先はそのままです。前の入金は操作の記録に残っています。');
+}
+$('nextCheckout').onclick=nextCheckout;$('nextCheckoutSummary').onclick=nextCheckout;
 $('clearCheckout').onclick=clearCheckout;$('confirmCheckout').onchange=controls;
 function qrTick(){const now=Date.now();if(merchantRequest&&!receiptWatch?.done){const remaining=Math.ceil((merchantRequest.expiresAt-now)/1000);if(remaining<=0){$('requestCard').hidden=true;removeQr();}else write('requestExpiry',`お会計QRの残り時間 ${Math.floor(remaining/60)}分${remaining%60}秒`);}
  if(checkoutRequest&&now>=checkoutRequest.expiresAt){write('checkoutSummary','お会計QRの期限が切れました。店側で新しく作ったQRを読み直してください。');$('confirmCheckout').checked=false;}
