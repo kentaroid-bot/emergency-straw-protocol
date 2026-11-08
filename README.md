@@ -12,13 +12,17 @@ Leave one straw within reach of the people—and AI agents—who might need to f
 
 **Status: v0.2, Devnet implementation + original offline concept mock.** The new app implements Phantom signing and a native Solana program, tested locally with LiteSVM. Deployed on public Devnet, with the full 120-second day cycle verified on-chain. Merchant checkout QR v2 supports automatic receipt confirmation against confirmed Devnet transactions. The current payment flow needs only the consumer's signature; merchant countersigning and return QR codes have been removed. Earlier Brave checks of the two-signature flow are historical; see the verification scope in DEVNET.md. [Devnet setup and verification status](DEVNET.md) · [日本語の設計・制作意図](DESIGN.md).
 
-The agreed issuance rule is **cumulative daily spending ≤ 300, with tokens minted only when a payment is accepted**. Unused allowance is an expiring right, never pre-minted supply. Earned producer credit persists. The Devnet prototype enforces this per wallet; unique-person enrollment remains future work.
+The agreed issuance rule is **cumulative daily Kusa spending ≤ 300, with WARA minted only when a payment is accepted**. Unused allowance is an expiring right, never pre-minted supply. Earned producer credit persists. The Devnet prototype enforces this per wallet; unique-person enrollment remains future work.
 
 ![The next morning: consumer allocation is renewed, producer credit remains](docs/mock.jpg)
 
-## 本トークンの名前：WARA
+## 一つのウォレット、KusaとWARA
 
-翌日も残る本トークン（生産者クレジット）の名前は **WARA**。深い緑に金色の藁が輪を描くアイコンを使います。日次枠は「今日の300の枠」のままで、使った分だけ相手にWARAが発行されます。
+翌日も残る本トークン（生産者クレジット）の名前は **WARA**。深い緑に金色の藁が輪を描くアイコンを使います。日次枠の名前は **Kusa（草）**。毎日300 Kusaまで使え、未使用分は翌日に繰り越しません。100 Kusaを使う支払いが成立すると、相手に100 WARAを新規発行します。Kusaは送金可能な仮トークンやSPLトークンではなく、チェーン上で管理する購入用の権利の表示名です。
+
+**ウォレットは一つで、Kusaを使う・WARAを受け取る・WARAで支払う、のすべてを行います。** 消費者用と生産者用に財布を分けず、生産者も同じKusaの枠を使えます。サイトによるウォレット新規発行や鍵の預かりは実装せず、現在はPhantomで接続します。
+
+English: **Kusa** names the expiring daily allowance; **WARA** is the enduring SPL token. One wallet supports both roles. Kusa is not a separately minted or transferable token. Unique-person enrollment and community verification are future work.
 
 Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devnet Demo / WARA-DEMO** と区別します。どちらも金銭的価値のないテストトークンです。[画像・メタデータの設計と確認方法](TOKEN-METADATA.md)。
 
@@ -30,10 +34,10 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 金融システムが止まった時にも、地域で食料や物資を交換できるようにする、小さな経済の実験です。
 
-使えるお金を、二つに分けています。
+一つのウォレットで、性質の違う二つを使い分けます。
 
-- **日次枠：** 毎日300に更新される購入用の権利。繰り越しや送金はできません。100の買い物が成立すると、枠が100減り、相手に100の本トークンが新しく発行されます。
-- **本トークン：** 取引で受け取った、翌日も残る対価。次の買い物にも使え、その場合は新規発行せず、相手へ移動します。
+- **Kusa（毎日の購入枠）：** 毎日300に更新される購入用の権利。繰り越しや送金はできません。100の買い物が成立すると、枠が100減り、相手に100の本トークンが新しく発行されます。
+- **WARA（残る本トークン）：** 取引で受け取った、翌日も残る対価。次の買い物にも使え、その場合は新規発行せず、相手へ移動します。
 
 どちらもSolanaのブロックチェーン上で管理します。Webアプリは操作の窓口で、本トークンは対応する別アプリからも送れます。
 
@@ -62,11 +66,13 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 ### 対話から整理した設計案
 
 1. **複数人による登録確認。** 対面の受付などで複数の確認役が実在と地域内の既存登録を確認し、登録内容に署名します。「3人の確認」は試験用の例であり、必要人数・確認役の選出・最初の確認役の登録方法は未決定です。
-2. **人の登録とウォレットを分離。** ウォレットとは別の参加者IDに日次使用額を紐づけます。同じ登録に複数のウォレットを紐づけても、合計で一日300まで。同一人物による別IDの取得は、地域での重複確認によって防ぐ必要があります。
+2. **一人・一登録・一ウォレットを基本にする。** ウォレットとは別の参加者IDにKusaの日次使用額を紐づけます。受給用と生産者用の二つの財布を必須にしません。財布を追加・交換しても一人の上限は増やさず、同一人物による別IDの取得は地域での重複確認によって防ぐ必要があります。
 3. **紛失時も使用額を引き継ぐ。** 複数人による再確認で、新しいウォレットを同じ登録へ紐づけ、古いウォレットの日次枠利用権限を解除します。その日の使用額は保持し、復旧による追加の300は発生させません。本トークンの残高は別管理であり、この登録復旧だけで紛失した秘密鍵や本トークンを取り戻せるわけではありません。
 4. **毎日の承認を不要にする。** 登録後はチェーンの日時から日次枠を更新し、確認役に毎朝頼む必要をなくします。日次枠を使った支払いの成立時だけ、相手に同額の本トークンを発行するルールを保ちます。
 
 確認の目的は重複登録を防ぐことです。所得・資産・就労・困窮の証明を求めず、生産者や本トークンを持つ人にも同じ日次枠を届けます。
+
+登録時に約15分の質問や練習を設ける案は、操作の理解と対面確認の時間として検討します。時間をかけるだけでは一人一登録を保証できないため、正誤で受給資格を決めず、時間制限だけに重複防止を任せません。同一IP・地域差は補助的な確認材料にとどめ、家族・避難所の共有回線や避難・転居だけを理由に拒否しない方針です。これらの受付・照合も未実装です。
 
 ### 成立に向けて検証すること
 
@@ -81,7 +87,17 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 先行例として、人のつながりから一人一アカウントの確認を目指す[BrightIDの公式説明](https://www.brightid.org/about)を参照できます。本プロジェクトでの採用・接続はしていません。
 
-最初のPoC候補は、一つの地域を想定したDevnet上の登録・復旧の試験です。同じ登録の二つのウォレットから200と100を使うと追加支払いが拒否されること、ウォレット交換後もその日の残り枠が変わらないこと、翌日には枠が更新されることを確認します。地域での重複確認と参加しやすさは、別途、対面運用の試験で確かめます。**誰もが今日を生きる300を、人同士の確認で支える**ことを次の検証の中心に置きます。
+最初のPoC候補は、一つの地域を想定したDevnet上の登録・復旧の試験です。同じ登録で200 Kusaを使用してウォレットを交換しても残りは100 Kusaのままであること、旧ウォレットからの利用や重複登録による追加の300を拒否すること、翌日には枠が更新されることを確認します。地域での重複確認と参加しやすさは、別途、対面運用の試験で確かめます。**誰もが今日を生きる300を、人同士の確認で支える**ことを次の検証の中心に置きます。
+
+## 検討中：消費者はQRカード、店側は端末
+
+**本人の提案：** 消費者がウォレット情報のQRカードを持ち、端末のある生産者・店がカメラで読み取って会計する。スマートフォンを持たない人も参加できる経路として検討します。これは未実装で、現在の「店がQRを提示し、買う人がPhantomで署名」とは別の利用方式です。
+
+**実装上の検討：** 公開アドレスや参加者IDのQRは利用者を指定できますが、支払いを承認する署名にはなりません。紙は取引ごとの署名を生成できず、QRは複製できるため、カードを読めたことと本人の同意を分けて設計します。秘密鍵をQRに印刷して店へ読み取らせる方式は採用案にしません。店が資産を動かす鍵を複製できてしまうためです。
+
+**次の試作候補（未採用）：** カードには公開IDだけを載せ、店が金額を提示し、本人の確認を経て、限定された代理権限でKusaの使用を記録する方式を比較検討します。代理承認を誰が担うか、店だけで本人の同意を偽れないか、カード複製・紛失・端末侵害時にどう止めるかが設計課題です。日次300・二重使用防止をチェーンで維持し、WARA残高を動かす権限は分離する案を検討します。PINを足すだけで不正な店の端末を安全にできるとは扱いません。
+
+対面での地域確認を使う代理方式と、秘密鍵を外へ出さずに署名できるIC/NFCカード方式は別の候補です。後者は単なる紙QRカードとは異なり、対応カード・読取機器・承認方法が必要です。まず利用時の手順と、本人の意思を守る承認方法を決めてからDevnet試作へ進みます。
 
 ## 残高の記録先と、このWebアプリ以外からの利用
 
@@ -89,8 +105,8 @@ Devnetでは通常版を **WARA Devnet / WARA**、120秒体験版を **WARA Devn
 
 | 種類 | チェーン上の記録 | このWebアプリ以外からの利用 |
 |---|---|---|
-| 今日の300の枠 | プロトコルの参加者アカウントに利用日・累計使用額を記録。チェーンの日時と合わせて残り枠を算出 | 枠そのものは送金できない。同じプログラムと循環設定を使う別クライアントから、同じ上限と買う人の署名条件に従って支払える |
-| 本トークン（生産者クレジット） | ウォレットに紐づくSPLトークン口座に残高を記録 | 同じDevnet・同じMintに対応した別アプリやCLIから送れる。所有者の署名と手数料用Devnet SOLが必要 |
+| Kusa（日次の購入枠） | プロトコルの参加者アカウントに利用日・累計使用額を記録。チェーンの日時と合わせて残り枠を算出 | 枠そのものは送金できない。同じプログラムと循環設定を使う別クライアントから、同じ上限と買う人の署名条件に従って支払える |
+| WARA（生産者クレジット） | ウォレットに紐づくSPLトークン口座に残高を記録 | 同じDevnet・同じMintに対応した別アプリやCLIから送れる。所有者の署名と手数料用Devnet SOLが必要 |
 
 ### 日次枠で100を支払う流れ
 
@@ -136,7 +152,7 @@ Current single-signer check: checkout QR image → Phantom → direct Devnet pay
 
 ### 買う側の支払合計・履歴
 
-「買う側：今日の支払いと履歴」で、今日の支払合計と「日次枠から」「持っているWARAから」の内訳を確認できます。明細には日時・金額・支払い方法・支払先・お会計番号・Explorerリンクを表示します。日次枠払いは相手への新規発行、WARA払いは既存トークンの送信として区別します。WARA払いは日次上限300に含まれず、SOL手数料も支払合計に含みません。
+「買う側：今日の支払いと履歴」で、今日の支払合計と「Kusaから」「持っているWARAから」の内訳を確認できます。明細には日時・金額・支払い方法・支払先・お会計番号・Explorerリンクを表示します。日次枠払いは相手への新規発行、WARA払いは既存トークンの送信として区別します。WARA払いは日次上限300に含まれず、SOL手数料も支払合計に含みません。
 
 支払いは残高の差額から推測せず、成功したconfirmed以上の取引の命令から読み取ります。このアプリと同じ日次枠払い命令、および本人の署名で本人のWARA ATAから直接送るSPL Transfer / TransferCheckedが対象です。自己宛て・失敗取引・別Mint・別循環設定は除外し、スワップなど別プログラム内部の送金、委任先による送金や他のトークン口座からの送信は集計しません。一つの取引に複数の対象支払いがある場合も各命令を一件として数え、署名と命令位置で重複排除します。
 
@@ -146,7 +162,7 @@ Current single-signer check: checkout QR image → Phantom → direct Devnet pay
 
 ### 店側の受取合計・履歴
 
-「店側：今日の受取とお会計履歴」に、日本時間の午前0時からの受取合計、日時・金額・支払い方法（日次枠払い / WARA払い / その他）・お会計番号・支払元・Explorerリンクを表示します。通常版と120秒体験版はMintごとに分かれ、どちらも集計日は日本時間です。
+「店側：今日の受取とお会計履歴」に、日本時間の午前0時からの受取合計、日時・金額・支払い方法（Kusa払い / WARA払い / その他）・お会計番号・支払元・Explorerリンクを表示します。通常版と120秒体験版はMintごとに分かれ、どちらも集計日は日本時間です。
 
 集計は現在残高と別です。100と10を受け取り、その後100を支払った場合、残高は10でも今日の受取合計は110です。ウォレットに対応するWARAのAssociated Token Accountについて、成功したconfirmed以上の取引での正味の増加を一件とし、署名で重複排除します。番号なしの送金も含み、複数の入出金をまとめた複合取引は正味の増加額です。別のトークン口座にある同一Mintの入金はこの一覧に含めません。会計上の売上・収益を確定する帳簿ではありません。
 
