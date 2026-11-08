@@ -7,7 +7,7 @@ await mkdir('dist/mock',{recursive:true});
 await mkdir('dist/card-demo',{recursive:true});
 await build({entryPoints:['card-demo/main.mjs'],bundle:true,outfile:'dist/card-demo/app.js',platform:'browser',target:['es2022'],sourcemap:false,minify:true});
 await copyFile('card-demo/style.css','dist/card-demo/style.css');
-for(const route of ['user','shop','support','account']){await mkdir(`dist/${route}`,{recursive:true});await copyFile('card-demo/index.html',`dist/${route}/index.html`);}
+for(const route of ['user','shop','support','account','communities']){await mkdir(`dist/${route}`,{recursive:true});await copyFile('card-demo/index.html',`dist/${route}/index.html`);}
 await build({entryPoints:['app/main.mjs'],bundle:true,outfile:'dist/app.js',platform:'browser',target:['es2022'],define:{global:'globalThis'},sourcemap:false,minify:true});
 for(const [source,destination] of [
  ['app/index.html','dist/index.html'],['app/index.html','dist/devnet/index.html'],

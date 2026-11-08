@@ -546,3 +546,7 @@ footer button {
   .printing-card #content > :not(:has(.qr-card)),
   .printing-card #content > section:has(.qr-card) > :not(.qr-card) { display: none; }
 }
+
+.manage-form { display: grid; gap: 12px; margin-top: 18px; }
+.manage-form label { display: grid; gap: 4px; }
+@media (max-width: 760px) { nav { flex-wrap: wrap; } }

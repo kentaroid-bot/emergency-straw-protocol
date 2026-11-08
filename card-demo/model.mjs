@@ -1,10 +1,6 @@
+import { initialRegistry, merchant, createCommunity, addShop, setAlliance, transferWara } from "./community.mjs";
 export const PIN = "123456";
 export const DAILY_KUSA = 10;
-export const COMMUNITIES = Object.freeze({
-  "midori-shoptown": "みどり商店街",
-  "waseda-univ": "早稲田大学",
-});
-
 export const WALLET_TYPES = ["embedded", "phantom"];
 const invitations = new Map([["WASEDA2026", "waseda-univ"]]);
 
@@ -41,6 +37,8 @@ export function balances(receipts) {
 
 export const fresh = () => ({
   version: 3,
+  registry: initialRegistry(),
+  transfers: [],
   walletType: "embedded",
   communities: ["midori-shoptown"],
   day: 1,
@@ -54,7 +52,11 @@ export const fresh = () => ({
 export function transition(state, action) {
   const s = structuredClone(state),
     p = s.pending;
-  if (action.type === "joinCommunity") {
+  if (action.type === "createCommunity") createCommunity(s, action);
+  else if (action.type === "addShop") addShop(s, action);
+  else if (action.type === "setAlliance") setAlliance(s, action);
+  else if (action.type === "payWara") transferWara(s, action);
+  else if (action.type === "joinCommunity") {
     const id = invitations.get(String(action.code).trim().toUpperCase());
     if (!id) throw Error("招待コードを確認してください。");
     if (s.communities.includes(id)) throw Error("すでに参加しています。");
@@ -72,14 +74,14 @@ export function transition(state, action) {
       action.amount > DAILY_KUSA - s.spent
     )
       throw Error("今日の残りKusaの範囲で、1以上の整数を入力してください。");
-    if (!action.id || s.history.some((x) => x.id === action.id))
+    if (!action.id || [...s.history, ...s.transfers].some((x) => x.id === action.id))
       throw Error("このお会計番号は使用済みです。");
-    if (!Object.hasOwn(COMMUNITIES, action.communityId))
-      throw Error("発行コミュニティを選んでください。");
+    const shop = merchant(s, action.communityId, action.shopId);
     if (!s.communities.includes(action.communityId))
       throw Error("アカウント画面でコミュニティに参加してください。");
     if (action.card !== undefined) verifyCard(action.card, s);
     s.pending = {
+      shopId: shop.id,
       communityId: action.communityId,
       id: action.id,
       amount: action.amount,

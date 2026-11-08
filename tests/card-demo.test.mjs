@@ -125,3 +125,50 @@ test("scanned cards must match this participant, card version and active status"
   assert.throws(() => scan(reissued, card));
   assert.equal(scan(reissued, cardPayload(reissued)).spent, 0);
 });
+
+const midori = "midori-shoptown", waseda = "waseda-univ";
+const alliance = (s, from, to, decision) =>
+  transition(s, {type: "setAlliance", communityId: from, peerId: to, decision});
+const spendWara = (s, amount, id, communityId, shopId = "S-001") =>
+  transition(s, {type: "payWara", amount, id, communityId, shopId, time: "12:00"});
+
+test("a newly created community can certify its own shops and use their registers", () => {
+  const action = {type: "createCommunity", communityId: "north", name: "北町", category: "地域", description: "北町商店会"};
+  const s = transition(fresh(), action);
+  assert.throws(() => transition(s, action));
+  assert.throws(() => transition(s, {...action, communityId: '<script>'}));
+  assert.throws(() => start(s, 1, "one", "north"));
+  const approved = transition(s, {type: "addShop", communityId: "north", name: "北町カフェ"});
+  assert.throws(() => transition(approved, {type:"addShop", communityId:"north", name:"北町カフェ"}));
+  assert.equal(pay(start(approved, 1, "one", "north")).history[0].shopId, "S-001");
+});
+
+test("both parties must agree; transferred WARA keeps its origin through cancellation and rollover", () => {
+  const s = pay(start(fresh(), 5));
+  assert.throws(() => spendWara(s, 25, "two", waseda), /未提携/);
+  const requested = alliance(s, midori, waseda, "request");
+  assert.throws(() => spendWara(requested, 25, "two", waseda));
+  assert.throws(() => alliance(requested, midori, waseda, "accept"));
+  const linked = alliance(requested, waseda, midori, "accept");
+  assert.throws(() => spendWara(linked, 25, "two", waseda, "unapproved"));
+  const paid = spendWara(linked, 25, "two", waseda);
+  assert.equal(paid.spent, 5);
+  assert.equal(paid.history.length, 1);
+  assert.deepEqual(paid.transfers[0].origins, [{id:midori, amount:25}]);
+  assert.throws(() => spendWara(paid, 5, "two", waseda));
+  assert.throws(() => spendWara(paid, 26, "three", waseda));
+  const removed = alliance(transition(paid, {type:"nextDay"}), midori, waseda, "remove");
+  assert.throws(() => spendWara(removed, 1, "three", waseda));
+  assert.deepEqual(spendWara(removed, 25, "three", midori).transfers[0].origins, [{id:midori, amount:25}]);
+});
+
+test("mixed-origin payment debits accepted funds at face value without minting", () => {
+  let s = pay(start(join(fresh()), 1));
+  s = pay(start(s, 2, "two", waseda), "two");
+  s = alliance(alliance(s, waseda, midori, "request"), midori, waseda, "accept");
+  const paid = spendWara(s, 25, "three", midori);
+  assert.deepEqual(paid.transfers[0].origins, [{id:midori,amount:10}, {id:waseda,amount:15}]);
+  assert.deepEqual(paid.history, s.history);
+  assert.equal(paid.spent, s.spent);
+  assert.throws(() => spendWara(paid, 6, "four", midori));
+});
