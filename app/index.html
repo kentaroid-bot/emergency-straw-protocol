@@ -44,6 +44,15 @@
 <button id="pay" disabled>支払う・Phantomで署名</button>
 <p class="small">手数料用のDevnet SOLが必要です。「確認済み」になるまで待ってください。送信結果が分からない時は、操作の記録のExplorerと残高を確認してから次の支払いへ進みます。</p>
 </section>
+<section id="payment-history"><h2>買う側：今日の支払いと履歴</h2>
+<p>今日使った合計 <strong id="todaySpent" class="received-total">—</strong></p>
+<div class="spending-breakdown"><p>日次枠から <strong id="todayDailySpent">—</strong></p><p>持っているWARAから <strong id="todayWaraSpent">—</strong></p></div>
+<p id="paymentHistoryNote" role="status">接続すると、このウォレットの支払い履歴をチェーンから読み込みます。</p>
+<button id="refreshPayments" disabled>支払い履歴を更新</button> <button id="morePayments" disabled>続きを読み込む</button>
+<div class="history-scroll"><table class="receipt-history-table"><caption>新しい支払いから表示（時刻は日本時間）</caption><thead><tr><th scope="col">日時</th><th scope="col">支払額</th><th scope="col">支払い方法</th><th scope="col">支払先・お会計</th><th scope="col">チェーン記録</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div>
+<p class="small">日本時間の午前0時から、成功した支払いを集計します。日次枠からの支払いは相手へWARAを新規発行し、持っているWARAからの支払いは既存トークンを送ります。WARA払いは日次上限300に含まれません。SOLの手数料もこの合計には含めません。</p>
+<p class="small">このアプリの日次枠払いと、あなたが署名してWARA受取口座（ATA）から直接送る通常のWARA送金が対象です。自己宛て・失敗した取引・スワップなど別プログラム経由の送金は含めません。通常版と120秒体験版は別集計で、体験版も日本時間の一日で集計します。</p>
+<p class="small">再読み込み後もチェーンから復元します。約1分ごと・支払い完了時に更新。古い履歴は「続きを読み込む」で表示でき、更新時は最新の範囲に戻ります。取得途中の合計は「取得済み分」です。</p></section>
 <section id="receive-payment"><h2>3. 着金は自動で確認</h2>
 <p>店側が作ったお会計QRへの支払いを約6秒ごとに確認します。<strong>日次枠払いもWARA払いも、受領署名や返送QRは不要です。</strong></p>
 <p id="receiptStatusSummary" class="receipt-status" role="status" aria-live="polite">お会計QRを作ると、入金を自動で確認します。</p>

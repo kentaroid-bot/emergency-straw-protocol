@@ -5,6 +5,7 @@ import {pk,assertDevnet,readInstance,readPerson,readClock,currentDay,remaining,a
 import {createRequest,parseRequest} from './qr-protocol.mjs';
 import {withReference,receiptLookup} from './receipt.mjs';
 import {historyReader,historySummary} from './receipt-history.mjs';
+import {createPaymentHistoryView} from './payment-history-view.mjs';
 import {qrImage,createScanner} from './qr-media.mjs';
 globalThis.Buffer=Buffer;
 const $=id=>document.getElementById(id),RPC='https://api.devnet.solana.com';
@@ -13,13 +14,14 @@ let manifest,program,config,instance,provider,wallet,person,credit=0n,chainTime=
 let checkoutRequest=null,merchantRequest=null,scanning=false,scanGeneration=0;
 let receiptWatch=null;
 let merchantHistory=null,historyBusy=false,historyEpoch=0,historyLastAttempt=0,historyAgain=false,historyCache=new Map();
+const paymentHistory=createPaymentHistoryView({connection,getContext:()=>wallet&&instance?{payer:wallet,program,config,mint:instance.mint,generation}:null});
 const write=(id,text)=>{$(id).textContent=text;};
 function notice(text,error=false){write('status',text);$('status').classList.toggle('error',error);}
 function usingDaily(){return $('payDaily').checked;}
 function showPaymentMethod(){const daily=usingDaily();
  write('paymentExplanation',daily?'あなたの署名で支払いが成立すると、今日の枠は300から200へ、相手には100 WARAを新規発行。自分が持っているWARAは減りません。店側の署名は不要です。':'WARAを100持っていて40支払うと、自分は60、相手は40増えます。新規発行なし・今日の枠は変わりません。残高の範囲で300を超える支払いもできます。店側の署名は不要です。');
  if(daily)$('amount').max='300';else $('amount').removeAttribute('max');controls();}
-function controls(){const blocked=busy||scanning,ready=Boolean(wallet&&instance)&&!blocked,confirmed=!checkoutRequest||($('confirmCheckout').checked&&Date.now()<checkoutRequest.expiresAt);for(const id of ['enroll','refresh','refreshReceived','makeRequest'])$(id).disabled=!ready;
+function controls(){paymentHistory.controls();const blocked=busy||scanning,ready=Boolean(wallet&&instance)&&!blocked,confirmed=!checkoutRequest||($('confirmCheckout').checked&&Date.now()<checkoutRequest.expiresAt);for(const id of ['enroll','refresh','refreshReceived','makeRequest'])$(id).disabled=!ready;
  for(const id of ['nextCheckout','nextCheckoutSummary']){const button=$(id);button.hidden=!receiptWatch?.done;button.disabled=!ready||!receiptWatch?.done;}
  for(const id of ['scanRequest','requestFile'])$(id).disabled=blocked||!instance;
  for(const id of ['merchantLabel','requestAmount','recipient','amount','confirmCheckout','clearCheckout'])$(id).disabled=blocked;
@@ -37,7 +39,7 @@ async function refresh(){
  write('remaining',person?String(remaining(person,currentDay(t,instance))):'未登録');write('credit',String(credit));
  write('receivedBalance',`現在のWARA残高：${credit}（${instance.period===120n?'120秒体験版':'一日循環'}）。お会計QRへの入金は自動確認の表示をご覧ください。`);
  write('enrollment',person?'参加済み。登録し直しても、その日の枠は増えません。':'参加登録すると日次枠を使えます。');
- controls();tick();if(Date.now()-historyLastAttempt>60000)updateHistory();
+ controls();tick();if(Date.now()-historyLastAttempt>60000)updateHistory();paymentHistory.update();
 }
 function tick(){if(!instance||!clockReadAt)return;const elapsed=Math.floor((Date.now()-clockReadAt)/1000);if(elapsed>30){write('countdown','更新待ち');write('clocknote','時計が古くなりました。「残高を更新」で再取得');return;}
  const t=chainTime+BigInt(elapsed),seconds=instance.period-(t+instance.offset)%instance.period;write('countdown',`${String(seconds/3600n).padStart(2,'0')}:${String(seconds/60n%60n).padStart(2,'0')}:${String(seconds%60n).padStart(2,'0')}`);write('clocknote',instance.period===120n?'体験用：120秒を一日とします':'日本時間の午前0時更新・表示は推定');
@@ -88,7 +90,7 @@ $('pay').onclick=()=>task(async()=>{
   createTransferCheckedInstruction(getAssociatedTokenAddressSync(instance.mint,wallet),instance.mint,getAssociatedTokenAddressSync(instance.mint,dest),wallet,value,0)
  ];
  if(checkoutRequest?.reference)instructions[instructions.length-1]=withReference(instructions.at(-1),checkoutRequest.reference);
- await signAndSend(instructions,validateCheckout);clearCheckout();
+ await signAndSend(instructions,validateCheckout);paymentHistory.update(true);clearCheckout();
  notice(daily?`${value}の支払いが成立しました。日次枠を消費し、相手に${value} WARAを発行しました。`:`${value} WARAの支払いが成立しました。既存残高から移動し、新規発行はありません。`);
  try{await refresh();}catch{notice('支払いは確認済みですが、残高の再取得に失敗しました。「残高を更新」を押してください。支払いをやり直す必要はありません。',true);}
 });
@@ -169,7 +171,7 @@ async function updateHistory(force=false,more=false){
 }
 $('refreshHistory').onclick=()=>updateHistory(true);$('moreHistory').onclick=()=>updateHistory(true,true);
 
-function resetQR(){resetHistory();scanner.stop();$('qrScanner').close();clearMerchant();clearCheckout();write('receivedBalance','接続中のウォレットと循環設定の残高を確認してください。');}
+function resetQR(){paymentHistory.reset();resetHistory();scanner.stop();$('qrScanner').close();clearMerchant();clearCheckout();write('receivedBalance','接続中のウォレットと循環設定の残高を確認してください。');}
 function validateCheckout(){if(!checkoutRequest)return;parseRequest(JSON.stringify(checkoutRequest),qrContext());
  if(!$('confirmCheckout').checked||$('recipient').value!==checkoutRequest.recipient||$('amount').value!==checkoutRequest.amount)throw Error('QRの宛先と金額をもう一度確認してください。');}
 function readQr(raw){

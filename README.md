@@ -134,6 +134,16 @@ Desktop Phantom was verified in Brave. Mobile users can open the URL in Phantom'
 
 Current single-signer check: checkout QR image → Phantom → direct Devnet payment of 10, followed by a 1 WARA transfer through the same button. No merchant signature was requested. [Verification receipt](deployments/phantom-single-signer.json).
 
+### 買う側の支払合計・履歴
+
+「買う側：今日の支払いと履歴」で、今日の支払合計と「日次枠から」「持っているWARAから」の内訳を確認できます。明細には日時・金額・支払い方法・支払先・お会計番号・Explorerリンクを表示します。日次枠払いは相手への新規発行、WARA払いは既存トークンの送信として区別します。WARA払いは日次上限300に含まれず、SOL手数料も支払合計に含みません。
+
+支払いは残高の差額から推測せず、成功したconfirmed以上の取引の命令から読み取ります。このアプリと同じ日次枠払い命令、および本人の署名で本人のWARA ATAから直接送るSPL Transfer / TransferCheckedが対象です。自己宛て・失敗取引・別Mint・別循環設定は除外し、スワップなど別プログラム内部の送金、委任先による送金や他のトークン口座からの送信は集計しません。一つの取引に複数の対象支払いがある場合も各命令を一件として数え、署名と命令位置で重複排除します。
+
+集計日は通常版・120秒体験版とも日本時間の午前0時から。体験版の日次枠使用額は複数の120秒周期を合算するため、一日の表示が300を超える場合があります。通常版と体験版は別集計です。再読み込み後もチェーンから復元し、約1分ごと・支払い完了時・更新ボタンで最新化します。初回/更新はウォレット取引を最大100件、続きを20件ずつ読みます。途中の合計は「取得済み分」、失敗時は前回の値に「更新前」と表示します。RPCで取得できる履歴に依存し、更新時は最新の範囲へ戻ります。
+
+検証結果は[支払い履歴のDevnet照合](deployments/payment-history.json)を参照。支払処理・署名・日次上限・プログラムには変更ありません。
+
 ### 店側の受取合計・履歴
 
 「店側：今日の受取とお会計履歴」に、日本時間の午前0時からの受取合計、日時・金額・支払い方法（日次枠払い / WARA払い / その他）・お会計番号・支払元・Explorerリンクを表示します。通常版と120秒体験版はMintごとに分かれ、どちらも集計日は日本時間です。

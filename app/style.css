@@ -6,3 +6,5 @@
 .receipt-status{padding:1rem;border:1px solid #b4c9b8;border-radius:8px;background:#f1f5ee;font-weight:600;overflow-wrap:anywhere}.receipt-status.received{background:#dcefdc;color:#174d2c;border:2px solid #28613d;font-size:1.4rem}.receipt-status.uncertain{background:#fff3db;color:#704b12}#receiptLink{display:block;margin-bottom:1rem}#receiptLink[hidden]{display:none}
 
 .received-total{display:block;font-size:2rem;margin-top:.5rem}.history-scroll{overflow-x:auto}.receipt-history-table{border-collapse:collapse;width:100%;font-size:14px}.receipt-history-table caption{text-align:left;padding:1rem 0;color:#586656}.receipt-history-table th,.receipt-history-table td{text-align:left;padding:12px 8px;border-bottom:1px solid #d2d8ca;vertical-align:top}.receipt-history-table small{display:block;margin-top:6px}.receipt-history-table td:first-child{min-width:145px}
+
+.spending-breakdown{display:flex;flex-wrap:wrap;gap:12px}.spending-breakdown p{flex:1;min-width:190px;padding:14px;background:#f1f5ee;border:1px solid #d2d8ca;border-radius:8px}.spending-breakdown strong{display:block;font-size:1.35rem;margin-top:6px}

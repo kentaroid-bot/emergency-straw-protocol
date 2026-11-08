@@ -87,7 +87,7 @@
     "demonstration_day_seconds": 120,
     "identity_scope": "wallet-per-instance-not-unique-person",
     "deployment_manifest": "deployments/devnet.json",
-    "verification": "34 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
+    "verification": "39 local tests; see deployments/devnet-smoke.json for current network evidence. Historical two-signature Phantom check is in deployments/phantom-check.json.",
     "compute_budget": {
       "units": 200000,
       "micro_lamports_per_unit": 0
@@ -113,6 +113,24 @@
     "source": "confirmed transactions of the wallet associated WARA token account",
     "day_boundary": "Asia/Tokyo midnight, for both daily and demo instances",
     "amount": "positive net token increase per successful transaction, deduplicated by signature",
+    "storage": "chain re-fetch, no browser persistent history",
+    "partial_total": "labelled when day coverage or timestamps are incomplete"
+  },
+  "payment_history": {
+    "source": "successful top-level daily payment and owner-signed SPL transfer instructions from wallet ATA",
+    "day_boundary": "Asia/Tokyo midnight, daily and demo counted separately",
+    "breakdown": [
+      "daily allocation consumed",
+      "existing WARA transferred"
+    ],
+    "deduplication": "transaction signature plus instruction index",
+    "exclusions": [
+      "self payments",
+      "failed transactions",
+      "CPI and delegated transfers",
+      "non-ATA sources",
+      "SOL fees"
+    ],
     "storage": "chain re-fetch, no browser persistent history",
     "partial_total": "labelled when day coverage or timestamps are incomplete"
   }

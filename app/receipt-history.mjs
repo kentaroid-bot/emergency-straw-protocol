@@ -39,8 +39,9 @@ export function incomingReceipt(tx,context){
 
 // Pages are fetched newest first. A failed/partial page never advances the cursor.
 // Cache only confirmed transaction bodies; never cache absent/indexing-lag data.
-export function historyReader(connection,context,cache=new Map()){
- const address=getAssociatedTokenAddressSync(pk(context.mint),pk(context.recipient));
+export function historyReader(connection,context,cache=new Map(),adapter={}){
+ const address=adapter.address??getAssociatedTokenAddressSync(pk(context.mint),pk(context.recipient));
+ const parse=adapter.parse??incomingReceipt;
  let before,done=false,oldest=null,unknownTime=false,pages=0;const entries=new Map(),seen=new Set();
  const snapshot=()=>({entries:[...entries.values()].sort((a,b)=>b.slot-a.slot),done,oldest,unknownTime,pages});
  return {snapshot,async load(){
@@ -53,9 +54,9 @@ export function historyReader(connection,context,cache=new Map()){
    let tx=cache.get(row.signature);
    if(!tx){tx=await connection.getTransaction(row.signature,{commitment:'confirmed',maxSupportedTransactionVersion:0});if(!tx)throw Error('履歴の取得待ちです。もう一度更新してください。');if(cache.size<1000)cache.set(row.signature,tx);}
    if(tx.transaction.signatures[0]!==row.signature)throw Error('履歴の署名が一致しません。');
-   receipts.push(incomingReceipt(tx,context));
+   const parsed=parse(tx,context);receipts.push(...(Array.isArray(parsed)?parsed:[parsed]));
   }
-  for(const receipt of receipts)if(receipt&&!seen.has(receipt.signature)){seen.add(receipt.signature);entries.set(receipt.signature,receipt);}
+  for(const receipt of receipts){if(!receipt)continue;const id=receipt.id??receipt.signature;if(!seen.has(id)){seen.add(id);entries.set(id,receipt);}}
   for(const row of rows){if(Number.isSafeInteger(row.blockTime))oldest=oldest===null?row.blockTime:Math.min(oldest,row.blockTime);else if(!row.err)unknownTime=true;}
   done=rows.length<20;before=rows.at(-1)?.signature??before;pages++;return snapshot();
  }};
