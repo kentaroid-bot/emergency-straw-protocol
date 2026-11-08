@@ -8,3 +8,6 @@ test-ledger/
 .env
 .env.*
 *-keypair.json
+.wrangler/
+.dev.vars
+.dev.vars.*

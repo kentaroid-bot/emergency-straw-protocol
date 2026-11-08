@@ -10,6 +10,46 @@ v0.3: トップは登録・財布。/shop/、/support/、/account/、/communitie
 
 静的なSitesホスティング。URLを知る人がChatGPTログインなしで閲覧できる。トランザクションはブラウザのPhantomで署名してSolana Devnetへ送る。サーバーの発行鍵・ウォレット鍵・データベース・RPCプロキシは持たない。
 
+## Cloudflare Workers 版
+
+`wara-monku-ai` はアプリを `dist/` から、同じオリジンの `/api/*` を Worker から配信します。配備予定のホストは `wara.monku.ai` です。Solana の接続先は Devnet のままです。
+
+### ローカル起動
+
+Node.js 24 で、初回は次を実行します。ローカル専用の秘密は一度だけ生成し、その後も同じ値を使います。
+
+```sh
+npm ci
+npm run build
+(umask 077; test -f .dev.vars || node -e 'console.log("AUTH_PEPPER=" + require("node:crypto").randomBytes(32).toString("hex"))' > .dev.vars)
+npm run workers:migrate:local
+npm run workers:dev
+```
+
+端末に表示されたローカル URL の `/signup/` で架空の電話番号を登録します。別のブラウザで同じ URL を開き、「サインイン」から同じ番号とパスワードを入力すると、アカウント画面に同じ公開アドレスが表示されます。Phantom の場合は同じアカウントで署名します。ローカル D1 は `.wrangler/state/` に残ります。`npm run workers:build` で、アセットとバインディングを含む配備の dry-run ができます。
+
+### 登録データと引き継ぎ
+
+| API | 処理 |
+| --- | --- |
+| `POST /api/auth/challenge` | 正規化した番号のハッシュと用途を受け取り、5分有効の試験コードと一度限りのチャレンジ ID を返す。 |
+| `POST /api/auth/activate` | コードと署名を検証して、番号に対応する財布を一度だけ登録する。既存の登録は上書きできない。 |
+| `POST /api/auth/signin` | コードに加えてパスワード由来の鍵、または登録済み Phantom の署名を検証し、保存したプロフィールを返す。 |
+
+組み込み・紙カードではブラウザが秘密鍵を AES-GCM で暗号化します。復号鍵とサインイン署名鍵は別々のソルトで、パスワードから PBKDF2-SHA256（各60万回）で導出します。Worker に渡るのは番号ハッシュ、公開鍵、署名、暗号化済みの Vault です。D1 の番号検索キーはサーバー秘密を使った HMAC です。Phantom の秘密鍵は Phantom が保持します。パスワードを失った場合、画面の確認コードだけでは財布を復元できません。
+
+同じオリジンで静的版を Workers 版へ更新した場合は、元の端末で「この端末の財布を引き継ぐ」を選べます。公開中の Sites と独自ドメインではブラウザの保存領域が異なります。Sites にだけある組み込み財布は独自ドメインに自動移行されません。静的 Sites では引き続き端末内登録を使います。Worker の通信障害時はエラーを表示して再試行できます。
+
+### 独自ドメインへの配備時
+
+1. Cloudflare の管理下にある `monku.ai` ゾーンに、`wara.monku.ai` 用のプロキシ有効な DNS レコードを用意します。`wrangler.toml` の Worker Route は `wara.monku.ai/*` です。
+2. `npx wrangler d1 create wara-monku-auth` で D1 を一度作り、返された UUID を `[[d1_databases]]` の `database_id` に設定します。`npx wrangler d1 migrations apply DB --remote` でスキーマを適用します。
+3. `AUTH_PEPPER` に十分な長さの専用乱数を生成し、Cloudflare の暗号化された Worker Secret として設定します（CLI は `npx wrangler secret put AUTH_PEPPER`）。番号検索に必要なため、安全に保管してください。DB の移行を伴わない変更・紛失は既存財布へのサインインに影響します。
+4. `npm run workers:build` で確認し、公開する時点で `npx wrangler deploy` を実行します。既定の `AUTH_MODE=disabled` では認証 API は 503 を返します。架空番号を使う Devnet 試験を明示的に公開する場合だけ `npx wrangler deploy --var AUTH_MODE:trial` を使います。
+5. 公開先の `/api/auth/status` と `/signup/` を確認し、別ブラウザで登録・復元した公開アドレスを照合します。
+
+確認コードの画面表示は電話番号の所有確認を行いません。試験中は他人が先に番号を登録できます。実番号の運用には SMS 配信と所有確認の実装が必要です。
+
 ## 他のホストにも置ける最小出力
 
 ```sh

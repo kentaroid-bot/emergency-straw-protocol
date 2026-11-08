@@ -11,7 +11,10 @@
     "build:program": "cargo build-sbf",
     "test:model": "node --test model.test.js",
     "deploy:devnet": "node scripts/deploy-devnet.mjs",
-    "smoke:devnet": "node scripts/smoke-devnet.mjs"
+    "smoke:devnet": "node scripts/smoke-devnet.mjs",
+    "workers:build": "npm run build && wrangler deploy --dry-run",
+    "workers:dev": "wrangler dev --local --var AUTH_MODE:trial",
+    "workers:migrate:local": "wrangler d1 migrations apply DB --local"
   },
   "engines": {
     "node": ">=24"
@@ -26,6 +29,7 @@
     "ai-agents"
   ],
   "dependencies": {
+    "@noble/curves": "1.9.7",
     "@solana/spl-token": "0.4.15",
     "@solana/web3.js": "1.99.0",
     "bs58": "6.0.0",
@@ -35,6 +39,8 @@
   },
   "devDependencies": {
     "esbuild": "0.28.2",
-    "litesvm": "1.6.2"
+    "litesvm": "1.6.2",
+    "miniflare": "5.20261104.0-beta",
+    "wrangler": "4.158.0"
   }
 }

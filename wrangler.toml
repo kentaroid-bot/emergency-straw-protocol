@@ -1,0 +1,21 @@
+name = "wara-monku-ai"
+main = "worker/index.mjs"
+compatibility_date = "2026-11-04"
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "wara.monku.ai/*", zone_name = "monku.ai" }]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wara-monku-auth"
+migrations_dir = "migrations"
+# Set database_id to the real D1 UUID before applying remote migrations.
+
+[vars]
+# Enable explicitly for a Devnet trial. SMS delivery is simulated.
+AUTH_MODE = "disabled"
