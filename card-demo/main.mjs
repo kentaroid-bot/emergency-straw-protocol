@@ -1,9 +1,10 @@
+import { createScanner } from "../app/qr-media.mjs";
 import QRCode from "qrcode";
-import { fresh, transition, PIN, DAILY_KUSA, COMMUNITIES, balances, distribution } from "./model.mjs";
+import { fresh, transition, PIN, DAILY_KUSA, COMMUNITIES, balances, distribution, WALLET_TYPES, cardPayload } from "./model.mjs";
 const KEY = "straw-card-ui-demo-v3",
   $ = (id) => document.getElementById(id);
 const route = location.pathname.split("/").filter(Boolean)[0];
-const role = ["user", "shop", "support"].includes(route) ? route : "user";
+const role = ["user", "shop", "support", "account"].includes(route) ? route : "user";
 const escape = (x) =>
   String(x).replace(
     /[&<>"']/g,
@@ -65,6 +66,13 @@ function read() {
       )
     )
       throw Error("invalid history");
+    // Earlier v3 receipts already identify the communities this card used.
+    s.walletType ??= "embedded";
+    s.communities ??= [...new Set(["midori-shoptown", ...s.history.map(h => h.communityId),
+      ...(s.pending ? [s.pending.communityId] : [])])];
+    if (!WALLET_TYPES.includes(s.walletType) || !Array.isArray(s.communities) ||
+        !s.communities.length || !s.communities.every(id => Object.hasOwn(COMMUNITIES, id)))
+      throw Error("invalid account");
     return s;
   } catch {
     storageWarning = true;
@@ -114,6 +122,25 @@ const today = () =>
   state.history
     .filter((h) => h.day === state.day)
     .reduce((sum, h) => sum + h.shopCredit, 0);
+function printedCard() {
+  return `<div class="qr-card"><span class="pill">画面モック専用 · 実際には使えません</span><p><strong>あおいさんの Kusaカード</strong></p><img id="cardQr" alt="デモ参加者C-001を示すQRコード"><p>C-001 · カード ${state.cardVersion}</p><p class="small">公開IDのみ。QRは本人の同意や署名ではありません。</p><button disabled id="printCard" class="secondary">このカードを印刷</button></div>`;
+}
+
+function account() {
+  const rows = Object.entries(COMMUNITIES).map(([id, name]) => {
+    const amount = balances(state.history.filter(h => h.communityId === id)).userWara;
+    return `<div class="history-row"><span>${name}</span><strong>${amount} WARA</strong></div>`;
+  }).join("");
+  return `<section class="panel"><h2>プロフィール</h2><p>あおいさん · C-001</p>
+<p>電話番号 090-****-1234 · 認証済み（デモ）</p>
+<label for="walletType" class="label">ウォレット種別（デモ）</label><select id="walletType">
+<option value="embedded" ${state.walletType === "embedded" ? "selected" : ""}>組み込みウォレット（自動生成）</option>
+<option value="phantom" ${state.walletType === "phantom" ? "selected" : ""}>外部ウォレット（Phantom）</option></select></section>
+<section class="panel"><h2>保有WARAの内訳</h2>${rows}<p>合計 <strong>${balances(state.history).userWara} WARA</strong></p></section>
+<section class="panel"><h2>参加コミュニティ</h2><ul>${state.communities.map(id => `<li>${COMMUNITIES[id]}</li>`).join("")}</ul>
+<form id="joinForm"><label class="label" for="invite">招待コード</label><input id="invite" required maxlength="32" placeholder="WASEDA2026"><button>参加する</button></form></section>
+<section class="panel"><h2>紙カード</h2>${state.cardActive ? printedCard() + '<button id="stopCard" class="danger">紛失したカードを停止する</button>' : '停止中です。' + link("/support", "地域窓口で再発行", true)}</section>`;
+}
 function user() {
   const remaining = DAILY_KUSA - state.spent;
   const leaves = Array.from({ length: DAILY_KUSA }, (_, i) =>
@@ -125,7 +152,7 @@ function user() {
 <section class="panel"><h2>持っているWARA</h2><div class="number">${balances(state.history).userWara} <small>WARA</small></div><p class="muted">支払い時に還付されたWARAは翌日も残ります。</p><p class="info-strip">WARA用ウォレットの接続は、このモックでは行いません。</p>
 </section></div>
 <section class="panel"><h2>あなたのQRカード</h2><p class="muted">${state.cardActive ? "紙のカードをお店に出すだけ。端末を持たない人も、地域窓口でカードを受け取る想定です。" : "カードは停止中です。地域窓口で再発行できます。"}</p>
-<div class="actions" style="margin-top:18px"><button id="showCard" ${state.cardActive ? "" : "disabled"}>${cardOpen ? "カードを閉じる" : "QRカードを表示"}</button>${link("/shop", "お店で支払いを試す", true)}</div>${cardOpen && state.cardActive ? `<div class="qr-card"><span class="pill">画面モック専用 · 実際には使えません</span><p><strong>あおいさんの Kusaカード</strong></p><img id="cardQr" alt="デモ参加者C-001を示すQRコード"><p>C-001 · カード ${state.cardVersion}</p><p class="small">公開IDのみ。QRは本人の同意や署名ではありません。</p><button id="printCard" class="secondary">このカードを印刷</button></div>` : ""}</section>
+<div class="actions" style="margin-top:18px"><button id="showCard" ${state.cardActive ? "" : "disabled"}>${cardOpen ? "カードを閉じる" : "QRカードを表示"}</button>${link("/shop", "お店で支払いを試す", true)}</div>${cardOpen && state.cardActive ? printedCard() : ""}</section>
 <section class="panel" id="history"><h2>買い物の履歴</h2>${historyRows()}</section>
 <section class="panel"><h2>カード・暗証番号の相談</h2><p class="muted">なくしたとき、暗証番号を使えないときは地域の窓口へ。端末がない場合は、窓口で残り枠や履歴も確認できる想定です。</p><p>${link("/support", "地域の窓口を見る", true)}</p>
 </section>`;
@@ -155,9 +182,9 @@ function shop() {
   else
     panel = `
 <section class="panel"><p class="flow-steps"><b>金額入力・カード読取</b> → 本人が確認 → 完了</p><h2>新しいお会計</h2>
-<form id="checkoutForm"><label for="community" class="label">発行コミュニティ</label><select id="community">${Object.entries(COMMUNITIES).map(([id, name]) => `<option value="${id}">${name}</option>`).join("")}</select>
-<label for="checkoutAmount" class="label">支払い額（残り ${DAILY_KUSA - state.spent} Kusa）</label><div class="actions presets"><button type="button" id="coffee" class="secondary" ${state.spent >= DAILY_KUSA ? "disabled" : ""}>コーヒー · 1 Kusa</button><button type="button" id="meal" class="secondary" ${DAILY_KUSA - state.spent < 5 ? "disabled" : ""}>定食 · 5 Kusa</button></div><div class="input-row"><input id="checkoutAmount" type="number" min="1" max="${DAILY_KUSA - state.spent}" step="1" value="${state.spent < DAILY_KUSA ? 1 : ""}" required ${state.spent === DAILY_KUSA ? "disabled" : ""}><small>Kusa</small></div><button type="submit" ${state.cardActive && state.spent < DAILY_KUSA ? "" : "disabled"}>デモカードを読み取る</button>
-</form><p class="small">カメラの代わりに、あおいさんのデモカードを読み取った状態へ進みます。</p>${!state.cardActive ? '<p class="disabled-note">カードは停止中です。地域窓口で再発行してください。</p>' : ""}<p class="info-strip">店員が金額を入れたら、次の画面をお客さんに向けます。</p>
+<form id="checkoutForm"><label for="community" class="label">発行コミュニティ</label><select id="community">${state.communities.map(id => `<option value="${id}">${COMMUNITIES[id]}</option>`).join("")}</select>
+<label for="checkoutAmount" class="label">支払い額（残り ${DAILY_KUSA - state.spent} Kusa）</label><div class="actions presets"><button type="button" id="coffee" class="secondary" ${state.spent >= DAILY_KUSA ? "disabled" : ""}>コーヒー · 1 Kusa</button><button type="button" id="meal" class="secondary" ${DAILY_KUSA - state.spent < 5 ? "disabled" : ""}>定食 · 5 Kusa</button></div><div class="input-row"><input id="checkoutAmount" type="number" min="1" max="${DAILY_KUSA - state.spent}" step="1" value="${state.spent < DAILY_KUSA ? 1 : ""}" required ${state.spent === DAILY_KUSA ? "disabled" : ""}><small>Kusa</small></div><button id="scanCard" type="button" ${state.cardActive && state.spent < DAILY_KUSA ? "" : "disabled"}>カメラでカードを読む</button> <button class="secondary" type="submit" ${state.cardActive && state.spent < DAILY_KUSA ? "" : "disabled"}>デモカードを読み取る</button>
+</form><p class="small">カメラがない場合はデモカードを選んでください。</p>${!state.cardActive ? '<p class="disabled-note">カードは停止中です。地域窓口で再発行してください。</p>' : ""}<p class="info-strip">店員が金額を入れたら、次の画面をお客さんに向けます。</p>
 </section>`;
   return (
     panel +
@@ -195,10 +222,39 @@ function checkoutURL(id) {
     id ? `/shop?checkout=${encodeURIComponent(id)}` : "/shop",
   );
 }
+function startCheckout(card) {
+  const form = $("checkoutForm");
+  if (!form || !form.reportValidity()) return;
+  const id = crypto.randomUUID();
+  if (update({ type: "checkout", id, card, communityId: $("community").value,
+               amount: Number($("checkoutAmount").value) })) {
+    checkoutURL(id);
+    message("カードを読み取りました。本人が金額を確認してください。");
+  }
+}
+
+const scanner = createScanner({
+  video: $("scanVideo"), canvas: $("scanCanvas"),
+  onValue(value) { closeScanner(); startCheckout(value); },
+  onStatus(status) { $("scanStatus").textContent = status; },
+  onStop() {},
+});
+function closeScanner() {
+  scanner.stop();
+  if ($("scanDialog").open) $("scanDialog").close();
+}
+$("closeScan").onclick = closeScanner;
+$("scanDialog").addEventListener("cancel", closeScanner);
+window.addEventListener("pagehide", closeScanner);
+document.addEventListener("visibilitychange", () => { if (document.hidden) closeScanner(); });
+window.addEventListener("afterprint", () => document.body.classList.remove("printing-card"));
+
 function render() {
+  if ($("scanDialog").open) closeScanner();
   const meta = {
     user: ["今日のあなたの財布", "今日使える枠と買い物の履歴を確認できます。"],
     shop: ["田中商店のレジ", "お会計ごとに発行コミュニティを選べます。"],
+    account: ["アカウント", "登録情報と紙カードを管理します。"],
     support: [
       "地域の確認窓口",
       "支払いへの立ち会いと、カードの停止・再発行ができます。",
@@ -212,7 +268,7 @@ function render() {
     else a.removeAttribute("aria-current");
   });
   $("content").innerHTML =
-    role === "user" ? user() : role === "shop" ? shop() : support();
+    role === "user" ? user() : role === "shop" ? shop() : role === "account" ? account() : support();
   bind("showCard", "click", () => {
     cardOpen = !cardOpen;
     render();
@@ -220,36 +276,38 @@ function render() {
   if ($("cardQr")) {
     const img = $("cardQr");
     QRCode.toDataURL(
-      JSON.stringify({
-        type: "wara-card-ui-demo",
-        participant: "C-001",
-        cardVersion: state.cardVersion,
-      }),
+      cardPayload(state),
       { width: 220, margin: 2 },
     )
       .then((url) => {
-        if (img.isConnected) img.src = url;
+        if (img.isConnected) {
+          img.onload = () => { if (img.isConnected) $("printCard").disabled = false; };
+          img.src = url;
+        }
       })
       .catch(() => message("QR画像を作れませんでした。"));
   }
-  for (const id of ["printCard", "printReceipt"])
-    bind(id, "click", () => window.print());
+  bind("printReceipt", "click", () => window.print());
+  bind("printCard", "click", () => {
+    document.body.classList.add("printing-card");
+    window.print();
+  });
+  bind("walletType", "change", () => update({ type: "setWallet", walletType: $("walletType").value }));
+  bind("joinForm", "submit", event => {
+    event.preventDefault();
+    if (update({ type: "joinCommunity", code: $("invite").value })) message("コミュニティに参加しました。");
+  });
   for (const [id, amount] of [["coffee", 1], ["meal", 5]])
     bind(id, "click", () => { $("checkoutAmount").value = amount; });
+  bind("scanCard", "click", async () => {
+    if (!$("checkoutForm").reportValidity()) return;
+    $("scanDialog").showModal();
+    try { await scanner.start("card"); }
+    catch { $("scanStatus").textContent = "カメラを開始できません。閉じてデモカードを使用できます。"; }
+  });
   bind("checkoutForm", "submit", (e) => {
     e.preventDefault();
-    const id = crypto.randomUUID();
-    if (
-      update({
-        type: "checkout",
-        id,
-        communityId: $("community").value,
-        amount: Number($("checkoutAmount").value),
-      })
-    ) {
-      checkoutURL(id);
-      message("デモカードを読み取りました。次は本人が金額を確認します。");
-    }
+    startCheckout();
   });
   bind("payForm", "submit", (e) => {
     e.preventDefault();

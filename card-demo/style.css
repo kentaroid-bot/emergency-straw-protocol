@@ -539,3 +539,10 @@ footer button {
     background: white;
   }
 }
+
+#scanDialog { max-width: min(90vw, 480px); }
+#scanVideo { display: block; width: 100%; }
+@media print {
+  .printing-card #content > :not(:has(.qr-card)),
+  .printing-card #content > section:has(.qr-card) > :not(.qr-card) { display: none; }
+}

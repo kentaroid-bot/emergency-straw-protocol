@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fresh, transition, balances } from "../card-demo/model.mjs";
+import { fresh, transition, balances, cardPayload } from "../card-demo/model.mjs";
 const start = (s = fresh(), amount = 1, id = "one", communityId = "midori-shoptown") =>
   transition(s, { type: "checkout", amount, id, communityId });
+const join = (s) => transition(s, { type: "joinCommunity", code: "WASEDA2026" });
 const pay = (s, id = "one") =>
   transition(s, {
     type: "pay",
@@ -12,7 +13,7 @@ const pay = (s, id = "one") =>
   });
 for (const [amount, shopCredit, userRefund] of [[1, 90, 10], [5, 450, 50]]) {
   test(`${amount} Kusa pays ${shopCredit} to shop and refunds ${userRefund} with the same origin`, () => {
-    const pending = start(fresh(), amount, "one", "waseda-univ");
+    const pending = start(join(fresh()), amount, "one", "waseda-univ");
     assert.equal(pending.spent, 0);
     assert.deepEqual(balances(pending.history), { shopWara: 0, userWara: 0 });
     const paid = pay(pending);
@@ -63,7 +64,7 @@ test("ten Kusa shared across communities, next day renews only the quota", () =>
   for (const amount of [0, -1, 1.5, 11, NaN])
     assert.throws(() => start(fresh(), amount));
   assert.throws(() => start(fresh(), 1, "one", "unknown"));
-  let s = pay(start(fresh(), 5));
+  let s = join(pay(start(fresh(), 5)));
   assert.throws(() => start(s, 6, "two", "waseda-univ"));
   s = pay(start(s, 5, "two", "waseda-univ"), "two");
   assert.equal(s.spent, 10);
@@ -89,4 +90,38 @@ test("stopping/reissuing a card and changing day cancel pending payments without
   assert.equal(s.pending, null);
   assert.throws(() => pay(s, "three"));
   assert.deepEqual(balances(s.history), { shopWara: 90, userWara: 10 });
+});
+
+test("invite code admits only the new community and leaves used quota intact", () => {
+  const s = pay(start());
+  assert.throws(() => start(s, 1, "two", "waseda-univ"));
+  assert.throws(() => transition(s, {type: "joinCommunity", code: "__proto__"}));
+  const member = join(s);
+  assert.deepEqual(member.communities, ["midori-shoptown", "waseda-univ"]);
+  assert.throws(() => join(member));
+  const paid = pay(start(member, 5, "two", "waseda-univ"), "two");
+  assert.equal(paid.spent, 6);
+  assert.equal(balances(paid.history.filter(h => h.communityId === "waseda-univ")).userWara, 50);
+});
+
+test("wallet switch preserves credits, membership and usage", () => {
+  const s = pay(start(join(fresh())));
+  const phantom = transition(s, { type: "setWallet", walletType: "phantom" });
+  assert.deepEqual(phantom, { ...s, walletType: "phantom" });
+  assert.deepEqual(transition(phantom, {type: "setWallet", walletType: "embedded"}), s);
+  assert.throws(() => transition(s, {type: "setWallet", walletType: "bad"}));
+});
+
+test("scanned cards must match this participant, card version and active status", () => {
+  const s = fresh(), card = cardPayload(s);
+  const scan = (state, payload) => transition(state, {
+    type: "checkout", amount: 1, communityId: "midori-shoptown", id: "scan", card: payload
+  });
+  assert.equal(scan(s, card).pending.status, "confirm");
+  for (const invalid of ["not-json", "null", card.replace("C-001", "C-002"), card.replace("wara-card-ui-demo", "other")])
+    assert.throws(() => scan(s, invalid));
+  assert.throws(() => scan(transition(s, {type: "stop"}), card));
+  const reissued = transition(s, {type: "reissue"});
+  assert.throws(() => scan(reissued, card));
+  assert.equal(scan(reissued, cardPayload(reissued)).spent, 0);
 });

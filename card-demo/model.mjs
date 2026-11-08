@@ -5,6 +5,26 @@ export const COMMUNITIES = Object.freeze({
   "waseda-univ": "早稲田大学",
 });
 
+export const WALLET_TYPES = ["embedded", "phantom"];
+const invitations = new Map([["WASEDA2026", "waseda-univ"]]);
+
+export function cardPayload(state) {
+  return JSON.stringify({
+    type: "wara-card-ui-demo",
+    participant: "C-001",
+    cardVersion: state.cardVersion,
+  });
+}
+
+function verifyCard(raw, state) {
+  let card;
+  try { card = JSON.parse(raw); } catch { /* handled below */ }
+  if (card?.type !== "wara-card-ui-demo" || card.participant !== "C-001")
+    throw Error("この利用者のKusaカードを読み取ってください。");
+  if (card.cardVersion !== state.cardVersion)
+    throw Error("このカードは再発行済みです。新しいカードを使用してください。");
+}
+
 export function distribution(amount) {
   const issued = amount * 100;
   const userRefund = issued / 10;
@@ -21,6 +41,8 @@ export function balances(receipts) {
 
 export const fresh = () => ({
   version: 3,
+  walletType: "embedded",
+  communities: ["midori-shoptown"],
   day: 1,
   spent: 0,
   cardVersion: 1,
@@ -32,7 +54,15 @@ export const fresh = () => ({
 export function transition(state, action) {
   const s = structuredClone(state),
     p = s.pending;
-  if (action.type === "checkout") {
+  if (action.type === "joinCommunity") {
+    const id = invitations.get(String(action.code).trim().toUpperCase());
+    if (!id) throw Error("招待コードを確認してください。");
+    if (s.communities.includes(id)) throw Error("すでに参加しています。");
+    s.communities.push(id);
+  } else if (action.type === "setWallet") {
+    if (!WALLET_TYPES.includes(action.walletType)) throw Error("ウォレット種別が不正です。");
+    s.walletType = action.walletType;
+  } else if (action.type === "checkout") {
     if (p) throw Error("進行中のお会計を完了または取り消してください。");
     if (!s.cardActive)
       throw Error("カードは停止中です。地域窓口で再発行してください。");
@@ -46,6 +76,9 @@ export function transition(state, action) {
       throw Error("このお会計番号は使用済みです。");
     if (!Object.hasOwn(COMMUNITIES, action.communityId))
       throw Error("発行コミュニティを選んでください。");
+    if (!s.communities.includes(action.communityId))
+      throw Error("アカウント画面でコミュニティに参加してください。");
+    if (action.card !== undefined) verifyCard(action.card, s);
     s.pending = {
       communityId: action.communityId,
       id: action.id,
