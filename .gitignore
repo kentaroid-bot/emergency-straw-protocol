@@ -11,3 +11,4 @@ test-ledger/
 .wrangler/
 .dev.vars
 .dev.vars.*
+/private
