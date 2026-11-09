@@ -6,13 +6,13 @@ v0.3: トップは登録・財布。/shop/、/support/、/account/、/communitie
 
 2026-11-07更新：買う人だけの署名で支払いを直接送信する版。店側の受領署名・返送QRを削除し、「3. 着金を確認する」に変更。現在の検証は[DEVNET.md](DEVNET.md)と[一者署名版のPhantom実測](deployments/phantom-single-signer.json)を参照。下記の初回公開時の二者署名検証は履歴として残す。
 
-公開URL: https://straw-promise-devnet.kentaroid.chatgpt.site/
+静的な [Sites 版](https://straw-promise-devnet.kentaroid.chatgpt.site/) も公開しています。
 
 静的なSitesホスティング。URLを知る人がChatGPTログインなしで閲覧できる。トランザクションはブラウザのPhantomで署名してSolana Devnetへ送る。サーバーの発行鍵・ウォレット鍵・データベース・RPCプロキシは持たない。
 
 ## Cloudflare Workers 版
 
-`wara-monku-ai` はアプリを `dist/` から、同じオリジンの `/api/*` を Worker から配信します。配備予定のホストは `wara.monku.ai` です。Solana の接続先は Devnet のままです。
+`wara-monku-ai` はアプリを `dist/` から、同じオリジンの `/api/*` を Worker から配信します。Solana の接続先は Devnet です。[公開アプリ](https://wara.monku.ai/)
 
 ### ローカル起動
 
@@ -42,9 +42,9 @@ npm run workers:dev
 
 ### 独自ドメインへの配備時
 
-1. Cloudflare の管理下にある `monku.ai` ゾーンに、`wara.monku.ai` 用のプロキシ有効な DNS レコードを用意します。`wrangler.toml` の Worker Route は `wara.monku.ai/*` です。
-2. `npx wrangler d1 create wara-monku-auth` で D1 を一度作り、返された UUID を `[[d1_databases]]` の `database_id` に設定します。`npx wrangler d1 migrations apply DB --remote` でスキーマを適用します。
-3. `AUTH_PEPPER` に十分な長さの専用乱数を生成し、Cloudflare の暗号化された Worker Secret として設定します（CLI は `npx wrangler secret put AUTH_PEPPER`）。番号検索に必要なため、安全に保管してください。DB の移行を伴わない変更・紛失は既存財布へのサインインに影響します。
+1. `wrangler.toml` で `wara.monku.ai` を Worker の Custom Domain に指定しています。Cloudflare がこのホストの DNS と TLS 証明書を管理します。併記した専用ルート `wara.monku.ai/*` をゾーン共通の `*.monku.ai/*` より優先し、アプリと API を同じ Worker に届けます。
+2. 公開環境の D1 と `database_id` は設定済みです。別環境を初めて作る場合は、専用の D1 を用意してその UUID を設定します。`npx wrangler d1 migrations apply DB --remote` でスキーマを適用します。
+3. 公開環境の `AUTH_PEPPER` は登録済みです。新しい環境の初回にだけ専用乱数を生成し、Cloudflare の暗号化された Worker Secret として設定します（CLI は `npx wrangler secret put AUTH_PEPPER`）。番号検索に必要なため、安全に保管してください。DB の移行を伴わない変更・紛失は既存財布へのサインインに影響します。
 4. `npm run workers:build` で確認し、公開する時点で `npx wrangler deploy` を実行します。既定の `AUTH_MODE=disabled` では認証 API は 503 を返します。架空番号を使う Devnet 試験を明示的に公開する場合だけ `npx wrangler deploy --var AUTH_MODE:trial` を使います。
 5. 公開先の `/api/auth/status` と `/signup/` を確認し、別ブラウザで登録・復元した公開アドレスを照合します。
 
